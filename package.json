@@ -1,0 +1,39 @@
+{
+  "name": "monitor-b3-swing-trade",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "start": "node dist/server.cjs",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "d3": "^7.9.0",
+    "express": "^5.2.1",
+    "lucide-react": "^1.31.0",
+    "motion": "^13.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/cors": "^2.8.19",
+    "@types/d3": "^7.4.3",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "esbuild": "^0.28.2",
+    "sharp": "^0.35.3",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  }
+}

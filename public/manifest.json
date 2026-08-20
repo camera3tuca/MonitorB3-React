@@ -1,0 +1,49 @@
+{
+  "name": "Monitor B3 - Swing Trade Pro",
+  "short_name": "Monitor B3",
+  "description": "Scanner de sobrevenda em tempo real e análise quantitativa da B3 para Swing Trade",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["finance", "business", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scanner de Quedas",
+      "short_name": "Scanner",
+      "description": "Abrir o scanner de oportunidades na B3",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

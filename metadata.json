@@ -1,0 +1,6 @@
+{
+  "name": "Monitor B3 - Swing Trade Pro",
+  "description": "Monitor de quedas de ativos da B3 (Ações, BDRs, ETFs) para Swing Trade com análise técnica, Triple Screen, Minervini, ML, RL e dados de mercado.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
