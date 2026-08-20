@@ -1,16 +1,28 @@
 {
   "name": "Monitor B3 - Swing Trade Pro",
   "short_name": "Monitor B3",
-  "description": "Scanner de sobrevenda em tempo real e análise quantitativa da B3 para Swing Trade",
+  "description": "Scanner de sobrevenda em tempo real e análise quantitativa da B3 para Swing Trade por ScienceBit (sciencebit.com.br)",
   "start_url": "/",
-  "id": "/",
+  "scope": "/",
+  "id": "com.monitorb3.swingtrade",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "orientation": "any",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "lang": "pt-BR",
   "dir": "ltr",
-  "categories": ["finance", "business", "utilities"],
+  "prefer_related_applications": false,
+  "categories": [
+    "finance",
+    "business",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -32,18 +44,41 @@
     },
     {
       "src": "/icon.svg",
-      "sizes": "any",
+      "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Scanner de Sobrevenda e Monitor de Ativos B3"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Gráfico Técnico e Análise Quantitativa"
+    }
+  ],
   "shortcuts": [
     {
-      "name": "Scanner de Quedas",
+      "name": "Scanner de Sobrevenda",
       "short_name": "Scanner",
       "description": "Abrir o scanner de oportunidades na B3",
       "url": "/",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
     }
   ]
 }

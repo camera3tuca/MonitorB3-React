@@ -9,6 +9,32 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
+// Public static assets
+const publicPath = path.join(process.cwd(), 'public');
+app.use(express.static(publicPath));
+
+// Dedicated PWA routes with explicit mime types
+app.get('/manifest.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.sendFile(path.join(publicPath, 'manifest.json'));
+});
+
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.sendFile(path.join(publicPath, 'sw.js'));
+});
+
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  const assetlinksPath = path.join(publicPath, 'assetlinks.json');
+  res.setHeader('Content-Type', 'application/json');
+  res.sendFile(assetlinksPath, (err) => {
+    if (err) {
+      res.json([]);
+    }
+  });
+});
+
 // Helper for identifying stock sectors
 const KNOWN_SECTORS: Record<string, string> = {
   PETR4: 'Petróleo & Gás', PETR3: 'Petróleo & Gás', PRIO3: 'Petróleo & Gás', RECV3: 'Petróleo & Gás', RRRP3: 'Petróleo & Gás', BRAV3: 'Petróleo & Gás', ENAT3: 'Petróleo & Gás', UGPA3: 'Petróleo & Gás', CSAN3: 'Petróleo & Gás', VBBR3: 'Petróleo & Gás',

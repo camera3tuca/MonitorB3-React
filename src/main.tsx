@@ -13,11 +13,16 @@ if (rootElement) {
 }
 
 // Register PWA Service Worker
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.log('SW registration notice:', err);
-    });
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        console.log('PWA Service Worker ativo:', reg.scope);
+      })
+      .catch((err) => {
+        console.log('SW registration notice:', err);
+      });
   });
 }
 

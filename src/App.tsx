@@ -48,7 +48,9 @@ import {
   Sparkles,
   TrendingDown,
   TrendingUp,
-  Zap
+  Zap,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -288,23 +290,53 @@ export const App: React.FC = () => {
       <footer className="mt-12 border-t border-slate-850 bg-slate-900/60 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="font-semibold text-slate-300">Monitor B3 - Swing Trade Pro</span>
               <span>•</span>
               <span>Scanner &amp; Análise Quantitativa</span>
             </div>
-            <div className="text-slate-400">
-              © {new Date().getFullYear()} Monitor B3. Todos os direitos reservados.
+            
+            {/* ScienceBit Author & Reference Link */}
+            <div className="flex items-center gap-3">
+              <a
+                id="link-sciencebit-footer"
+                href="https://sciencebit.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-blue-400 hover:text-blue-300 transition font-medium bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 px-2.5 py-1 rounded-lg"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Mais informações: <strong className="text-white">sciencebit.com.br</strong></span>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+              <span className="text-slate-500 hidden sm:inline">|</span>
+              <span className="text-slate-400">
+                © {new Date().getFullYear()} Monitor B3
+              </span>
             </div>
           </div>
 
           <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-4 text-[11px] leading-relaxed text-slate-400">
-            <p className="font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
-              <span>⚠️ Aviso Legal, Direitos &amp; Declaração de Risco (Disclaimer)</span>
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 pb-2 border-b border-slate-750">
+              <p className="font-semibold text-slate-300 flex items-center gap-1.5">
+                <span>⚠️ Aviso Legal, Direitos &amp; Declaração de Risco (Disclaimer)</span>
+              </p>
+              <a
+                href="https://sciencebit.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-emerald-400 transition flex items-center gap-1 text-[11px]"
+              >
+                <span>Portal &amp; Análises: <strong>sciencebit.com.br</strong></span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
             <p>
               Este aplicativo e todas as suas análises, modelos estatísticos, projeções de aprendizado de máquina (Machine Learning), backtests e pontuações têm <strong>caráter estritamente educacional, analítico e informativo</strong>. Nenhuma informação apresentada constitui recomendação de compra, venda ou alocação de valores mobiliários, ações, BDRs, ETFs ou derivativos.
+            </p>
+            <p className="mt-1">
+              <strong>Desenvolvimento &amp; Conteúdo:</strong> Desenvolvido e mantido para fins de pesquisa quantitativa e educação financeira. Para artigos, pesquisas e novidades técnicas, visite <a href="https://sciencebit.com.br" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-medium">sciencebit.com.br</a>.
             </p>
             <p className="mt-1">
               <strong>Isenção de Vínculo:</strong> Este é um software independente de análise quantitativa e educacional de mercado. Não possui qualquer afiliação, parceria, patrocínio ou vínculo institucional com a B3 S.A. – Brasil, Bolsa, Balcão, nem com quaisquer corretoras ou provedores de índices comerciais. Todas as marcas eventualmente citadas pertencem aos seus respectivos titulares e são mencionadas unicamente a título de referência contextual.
