@@ -15,6 +15,18 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
+      "package_name": "monitorb3.twa_z9h2",
+      "sha256_cert_fingerprints": [
+        "EF:63:CC:F0:89:C9:14:BB:A7:75:93:23:34:E1:1A:ED:63:12:F5:FB:E2:D5:FA:61:6C:27:74:2B:4F:70:96:CC",
+        "29:DD:BB:16:45:BF:70:DF:E7:8F:2A:5F:8C:78:C0:36:AE:29:A5:55",
+        "DC:8E:E9:56:65:CB:67:0D:C2:B8:51:9D:2A:4E:B7:BB:C7:23:DB:AA"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
       "package_name": "com.monitorb3.app",
       "sha256_cert_fingerprints": [
         "EF:63:CC:F0:89:C9:14:BB:A7:75:93:23:34:E1:1A:ED:63:12:F5:FB:E2:D5:FA:61:6C:27:74:2B:4F:70:96:CC",
