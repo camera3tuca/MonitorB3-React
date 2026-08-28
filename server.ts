@@ -26,11 +26,16 @@ app.get('/sw.js', (req, res) => {
 });
 
 app.get('/.well-known/assetlinks.json', (req, res) => {
-  const assetlinksPath = path.join(publicPath, 'assetlinks.json');
+  const assetlinksPath = path.join(publicPath, '.well-known', 'assetlinks.json');
+  const fallbackPath = path.join(publicPath, 'assetlinks.json');
   res.setHeader('Content-Type', 'application/json');
   res.sendFile(assetlinksPath, (err) => {
     if (err) {
-      res.json([]);
+      res.sendFile(fallbackPath, (fallbackErr) => {
+        if (fallbackErr) {
+          res.json([]);
+        }
+      });
     }
   });
 });
