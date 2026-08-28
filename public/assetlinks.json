@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "monitorb3.twa",
+      "sha256_cert_fingerprints": [
+        "EF:63:CC:F0:89:C9:14:BB:A7:75:93:23:34:E1:1A:ED:63:12:F5:FB:E2:D5:FA:61:6C:27:74:2B:4F:70:96:CC"
+      ]
+    }
+  }
+]

@@ -30,6 +30,7 @@ import {
   runScannerBacktest
 } from './utils/indicators';
 import { getSectorStyle } from './utils/sectorUtils';
+import { getApiUrl } from './utils/api';
 
 import {
   Activity,
@@ -94,7 +95,7 @@ export const App: React.FC = () => {
   const fetchScanner = async () => {
     setIsScanning(true);
     try {
-      const res = await fetch('/api/scan', {
+      const res = await fetch(getApiUrl('/api/scan'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ classes: selectedClasses })
@@ -129,7 +130,7 @@ export const App: React.FC = () => {
     const loadData = async () => {
       try {
         // Fetch historical candles
-        const histRes = await fetch(`/api/history/${selectedTicker}?timeframe=${timeframe}&range=1y`);
+        const histRes = await fetch(getApiUrl(`/api/history/${selectedTicker}?timeframe=${timeframe}&range=1y`));
         if (histRes.ok && isMounted) {
           const histJson = await histRes.json();
           if (histJson.candles && Array.isArray(histJson.candles)) {
@@ -139,14 +140,14 @@ export const App: React.FC = () => {
         }
 
         // Fetch fundamentals
-        const fundRes = await fetch(`/api/fundamentals/${selectedTicker}`);
+        const fundRes = await fetch(getApiUrl(`/api/fundamentals/${selectedTicker}`));
         if (fundRes.ok && isMounted) {
           const fundJson = await fundRes.json();
           setFundamentals(fundJson);
         }
 
         // Fetch news
-        const newsRes = await fetch(`/api/news/${selectedTicker}`);
+        const newsRes = await fetch(getApiUrl(`/api/news/${selectedTicker}`));
         if (newsRes.ok && isMounted) {
           const newsJson = await newsRes.json();
           if (newsJson.artigos) {
