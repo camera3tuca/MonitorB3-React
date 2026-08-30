@@ -112,9 +112,11 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Title & Brand */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 shadow-inner">
-            <TrendingDown className="w-6 h-6 text-emerald-400" />
-          </div>
+          <img
+            src="/icon.svg"
+            alt="Monitor B3 Logo"
+            className="w-11 h-11 rounded-xl shadow-lg border border-slate-700/80 bg-slate-900 object-cover flex-shrink-0"
+          />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
@@ -173,19 +175,17 @@ export const Header: React.FC = () => {
             {guiaAberto ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
-          {/* ScienceBit portal link */}
-          <a
-            id="link-sciencebit-header"
-            href="https://sciencebit.com.br"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Acesse ScienceBit para mais informações e análises"
-            className="flex items-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 px-3 py-1.5 rounded-lg font-medium transition"
+          {/* App Brand Badge with Logo */}
+          <div
+            id="brand-logo-badge"
+            className="flex items-center gap-2 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-lg text-slate-300 shadow-sm"
           >
-            <Globe className="w-3.5 h-3.5" />
-            <span>sciencebit.com.br</span>
-            <ExternalLink className="w-3 h-3 opacity-70" />
-          </a>
+            <img src="/icon.svg" alt="Monitor B3" className="w-4 h-4 rounded flex-shrink-0" />
+            <span className="font-semibold text-white tracking-wide">Monitor B3</span>
+            <span className="bg-blue-500/25 text-blue-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-500/30">
+              PRO
+            </span>
+          </div>
         </div>
       </div>
 
@@ -240,17 +240,12 @@ export const Header: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 px-1">
-              <span>Para análises aprofundadas, estudos quantitativos e novas estratégias:</span>
-              <a
-                href="https://sciencebit.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 hover:underline"
-              >
-                <span>Visite sciencebit.com.br</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+            <div className="mt-2 pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[11px] text-slate-400 px-1">
+              <span>Metodologias quantitativas aplicadas aos ativos da B3 (Ações, BDRs e ETFs).</span>
+              <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                Módulo de Estratégias &amp; Filtros Técnicos
+              </span>
             </div>
           </motion.div>
         )}
