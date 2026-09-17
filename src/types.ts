@@ -7,6 +7,10 @@ export interface AssetOpportunity {
   Setor: string;
   Preco: number;
   Volume: number;
+  VolHoje?: number;
+  VolMedio?: number;
+  NumNegociosEst?: number;
+  AvisoLiquidez?: string;
   Queda_Dia: number;
   Gap: number;
   IS: number;

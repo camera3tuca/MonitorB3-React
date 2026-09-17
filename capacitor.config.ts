@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.monitorb3.app',
+  appId: 'com.sciencebit.monitorb3',
   appName: 'Monitor B3',
   webDir: 'dist',
   server: {

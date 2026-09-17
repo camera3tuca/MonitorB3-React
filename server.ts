@@ -6,8 +6,25 @@ import { createServer as createViteServer } from 'vite';
 const app = express();
 const PORT = 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
+
+// Prevent aggressive caching of API responses, HTML, manifest, and service worker
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.path.startsWith('/api') || req.path === '/' || req.path === '/index.html' || req.path === '/manifest.json' || req.path === '/sw.js') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 
 // Public static assets
 const publicPath = path.join(process.cwd(), 'public');
@@ -38,6 +55,16 @@ app.get('/.well-known/assetlinks.json', (req, res) => {
       });
     }
   });
+});
+
+app.get('/monitorb3-web.zip', (req, res) => {
+  const zipPath = path.join(publicPath, 'monitorb3-web.zip');
+  res.download(zipPath, 'monitorb3-web.zip');
+});
+
+app.get('/download-zip', (req, res) => {
+  const zipPath = path.join(publicPath, 'monitorb3-web.zip');
+  res.download(zipPath, 'monitorb3-web.zip');
 });
 
 // Helper for identifying stock sectors
@@ -83,36 +110,77 @@ function classificarAtivo(ticker: string, tvType?: string, typeSpecs?: any): 'A�
   const suf2 = t.slice(-2);
   const suf11 = t.endsWith('11');
 
+  // Check ETFs: typeSpecs has 'etf' or ticker is a known ETF
+  const isEtfSpec = Array.isArray(typeSpecs)
+    ? typeSpecs.includes('etf')
+    : (typeof typeSpecs === 'string' && typeSpecs.toLowerCase().includes('etf'));
+
+  const etfSet = new Set([
+    'BOVA11', 'BOVV11', 'BOVB11', 'BRAX11', 'PIBB11', 'SMAL11', 'IVVB11',
+    'SPXI11', 'NASD11', 'HASH11', 'GOLD11', 'ACWI11', 'WRLD11', 'XINA11',
+    'QBTC11', 'BITH11', 'TECK11', 'HTEK11', 'GOAT11', 'NBIT11', 'BITC11',
+    'XBIT11', 'HODL11', 'BITI11', 'GBIT11', 'EBIT11', 'CRPT11', 'RICO11',
+    'GBTC11', 'ABTC11', 'TOPY11', 'AURO11', 'GLDX11', 'BIZD11', 'XBCI11',
+    'SVAL11', 'OROF11', 'EUAT11', 'SPXU11', 'SILK11', 'BNDX11', 'XSPI11',
+    'PRAF11', 'SPXB11', 'IGTI11', 'SPYI11', 'GDIV11', 'PEVC11', 'UTEC11',
+    'GOLX11', 'PKIN11', 'GENB11', 'AGGX11', 'QDFI11', 'USDB11', 'GPUS11',
+    'DOLB11', 'B5MB11', 'NBOV11', 'GOLB11', 'HERT11', 'GOVE11', 'SPYR11',
+    'B3BR11', '03BK11', '10BK11', 'ALUG11', 'FIND11', 'MATB11', 'DIVO11'
+  ]);
+
+  if (isEtfSpec || etfSet.has(t)) {
+    return 'ETF';
+  }
+
+  // BDRs (end with 31, 32, 33, 34, 35, 39)
   if (['31', '32', '33', '34', '35', '39'].includes(suf2)) {
     return 'BDR';
   }
+
+  // Real estate funds (FIIs)
   if (suf11) {
-    const etfSet = new Set(['BOVA11', 'BOVV11', 'BOVB11', 'BRAX11', 'PIBB11', 'SMAL11', 'IVVB11', 'SPXI11', 'NASD11', 'HASH11', 'GOLD11', 'ACWI11', 'WRLD11']);
-    if (etfSet.has(t) || tvType === 'fund' && String(typeSpecs).includes('etf')) {
-      return 'ETF';
-    }
     if (tvType === 'fund') return 'FII';
     return 'Ação'; // Units like KLBN11, SANB11, TAEE11, SAPR11
   }
+
   return 'Ação';
 }
 
-function calcularLiquidez(volMedio: number, preco: number, volumeHoje: number): number {
-  let vol = Number(volMedio || 0);
-  if (vol <= 0) vol = Number(volumeHoje || 0);
-  const p = Number(preco || 0);
-  const fin = vol * p;
+function calcularLiquidez(volFinSustentado: number, volFinHoje: number, classe?: string): {
+  liquidez: number;
+  avisoLiquidez?: string;
+  numNegociosEst: number;
+} {
+  const sust = Number(volFinSustentado || 0);
+  const hoje = Number(volFinHoje || 0);
 
-  if (fin >= 5_000_000) return 10;
-  if (fin >= 2_000_000) return 9;
-  if (fin >= 1_000_000) return 8;
-  if (fin >= 500_000) return 7;
-  if (fin >= 200_000) return 6;
-  if (fin >= 100_000) return 5;
-  if (fin >= 50_000) return 4;
-  if (fin >= 20_000) return 3;
-  if (fin >= 5_000) return 2;
-  return 1;
+  // Considera a melhor estimativa entre o volume sustentado e o dia atual
+  const baseFin = Math.max(sust, hoje * 0.75, (sust * 0.6 + hoje * 0.4));
+
+  // Estimativa de negócios com base no ticket médio típico de BDR / Ação no varejo B3 (~R$ 2.500)
+  const numNegociosEst = Math.max(1, Math.round(baseFin / 2500));
+
+  // Escala graduada, realista e calibrada para o universo B3 (Ações, BDRs e ETFs)
+  let liquidez = 1;
+  if (baseFin >= 30_000_000) liquidez = 10;
+  else if (baseFin >= 10_000_000) liquidez = 9;
+  else if (baseFin >= 3_000_000) liquidez = 8;
+  else if (baseFin >= 1_000_000) liquidez = 7;
+  else if (baseFin >= 400_000) liquidez = 6;
+  else if (baseFin >= 150_000) liquidez = 5;
+  else if (baseFin >= 60_000) liquidez = 4;
+  else if (baseFin >= 25_000) liquidez = 3;
+  else if (baseFin >= 8_000) liquidez = 2;
+  else liquidez = 1;
+
+  let avisoLiquidez: string | undefined;
+  if (liquidez === 1) {
+    avisoLiquidez = 'Volume diário muito reduzido (< R$ 8k/dia). Poucos negócios executados na B3. Utilize ordens limitadas para evitar distorção de spread no Profit.';
+  } else if (liquidez === 2) {
+    avisoLiquidez = 'Liquidez moderada para BDR/Small Cap (~R$ 8k a R$ 25k/dia). Opere com ordens limitadas proporcionais às ofertas do Profit.';
+  }
+
+  return { liquidez, avisoLiquidez, numNegociosEst };
 }
 
 function gerarSinais(p: number, rsi: number, stoch: number, macdHist: number, ema20?: number, ema50?: number, ema200?: number) {
@@ -169,6 +237,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
+// ── Global scan cache for fast indicators reconciliation ──
+const scanCacheByTicker = new Map<string, any>();
+
 // ── API: Scan B3 Opportunities ──
 app.post('/api/scan', async (req, res) => {
   try {
@@ -178,59 +249,94 @@ app.post('/api/scan', async (req, res) => {
       "name", "close", "change", "open", "high", "low", "volume",
       "RSI", "Stoch.K", "Stoch.D", "MACD.macd", "MACD.signal",
       "BB.lower", "BB.upper", "average_volume_10d_calc", "gap",
-      "EMA20", "EMA50", "EMA200", "description", "type", "typespecs", "sector", "SMA200"
+      "EMA20", "EMA50", "EMA200", "description", "type", "typespecs", "sector", "SMA200",
+      "Value.Traded", "average_volume_30d_calc", "average_volume_90d_calc"
     ];
+
+    const fetchTvScan = async (filter: any[], range: [number, number] = [0, 100]) => {
+      try {
+        const resp = await fetch('https://scanner.tradingview.com/brazil/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+          body: JSON.stringify({
+            filter,
+            options: { lang: 'pt' },
+            symbols: { query: { types: [] }, tickers: [] },
+            columns: tvColumns,
+            sort: { sortBy: 'change', sortOrder: 'asc' },
+            range
+          }),
+          signal: AbortSignal.timeout(6000)
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          return (json.data && Array.isArray(json.data)) ? json.data : [];
+        }
+      } catch (err) {
+        console.warn('TradingView scanner query error:', err);
+      }
+      return [];
+    };
 
     let tvResults: any[] = [];
     try {
-      const resp = await fetch('https://scanner.tradingview.com/brazil/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
-        body: JSON.stringify({
-          filter: [
-            { left: "type", operation: "in_range", right: ["stock", "dr", "fund"] },
-            { left: "change", operation: "less", right: 0 }
-          ],
-          options: { lang: "pt" },
-          symbols: { query: { types: [] }, tickers: [] },
-          columns: tvColumns,
-          sort: { sortBy: "change", sortOrder: "asc" },
-          range: [0, 200]
-        }),
-        signal: AbortSignal.timeout(6000)
-      });
+      // Execute parallel scans across distinct asset categories to guarantee ETFs, Stocks, BDRs & FIIs are all included
+      const [stocksData, bdrsData, etfsData, fiisData] = await Promise.all([
+        fetchTvScan([
+          { left: 'type', operation: 'equal', right: 'stock' },
+          { left: 'change', operation: 'less', right: 0 }
+        ], [0, 100]),
+        fetchTvScan([
+          { left: 'type', operation: 'equal', right: 'dr' },
+          { left: 'change', operation: 'less', right: 0 }
+        ], [0, 100]),
+        fetchTvScan([
+          { left: 'typespecs', operation: 'has', right: ['etf'] },
+          { left: 'change', operation: 'less', right: 0 }
+        ], [0, 80]),
+        fetchTvScan([
+          { left: 'type', operation: 'equal', right: 'fund' },
+          { left: 'typespecs', operation: 'has_none_of', right: ['etf'] },
+          { left: 'change', operation: 'less', right: 0 }
+        ], [0, 40])
+      ]);
 
-      if (resp.ok) {
-        const json = await resp.json();
-        if (json.data && Array.isArray(json.data)) {
-          tvResults = json.data.map((item: any) => {
-            const row = item.d;
-            return {
-              name: row[0],
-              close: row[1],
-              change: row[2],
-              open: row[3],
-              high: row[4],
-              low: row[5],
-              volume: row[6],
-              RSI: row[7],
-              Stoch_K: row[8],
-              Stoch_D: row[9],
-              MACD_macd: row[10],
-              MACD_signal: row[11],
-              BB_lower: row[12],
-              BB_upper: row[13],
-              average_volume_10d_calc: row[14],
-              gap: row[15],
-              EMA20: row[16],
-              EMA50: row[17],
-              EMA200: row[18],
-              description: row[19],
-              type: row[20],
-              typespecs: row[21],
-              sector: row[22],
-              SMA200: row[23],
-            };
+      const combinedRaw = [...stocksData, ...bdrsData, ...etfsData, ...fiisData];
+      const seenTickers = new Set<string>();
+
+      for (const item of combinedRaw) {
+        const row = item.d;
+        const name = String(row[0] || '');
+        if (!seenTickers.has(name)) {
+          seenTickers.add(name);
+          tvResults.push({
+            name: row[0],
+            close: row[1],
+            change: row[2],
+            open: row[3],
+            high: row[4],
+            low: row[5],
+            volume: row[6],
+            RSI: row[7],
+            Stoch_K: row[8],
+            Stoch_D: row[9],
+            MACD_macd: row[10],
+            MACD_signal: row[11],
+            BB_lower: row[12],
+            BB_upper: row[13],
+            average_volume_10d_calc: row[14],
+            gap: row[15],
+            EMA20: row[16],
+            EMA50: row[17],
+            EMA200: row[18],
+            description: row[19],
+            type: row[20],
+            typespecs: row[21],
+            sector: row[22],
+            SMA200: row[23],
+            Value_Traded: row[24],
+            average_volume_30d_calc: row[25],
+            average_volume_90d_calc: row[26],
           });
         }
       }
@@ -285,13 +391,29 @@ app.post('/api/scan', async (req, res) => {
         const ema200 = typeof row.EMA200 === 'number' && !isNaN(row.EMA200) && row.EMA200 > 0
           ? Number(row.EMA200.toFixed(2))
           : (typeof row.SMA200 === 'number' && !isNaN(row.SMA200) && row.SMA200 > 0 ? Number(row.SMA200.toFixed(2)) : undefined);
-        const volMed = Number(row.average_volume_10d_calc) || Number(row.volume) || 0;
-        const volFin = volMed * close;
+        const valTradedHoje = Number(row.Value_Traded) || (Number(row.volume || 0) * close);
+        const volMed10 = Number(row.average_volume_10d_calc) || Number(row.volume || 0);
+        const volMed30 = Number(row.average_volume_30d_calc) || volMed10;
+        const volMed90 = Number(row.average_volume_90d_calc) || volMed30;
+
+        const finHoje = valTradedHoje;
+        const fin10d = volMed10 * close;
+        const fin30d = volMed30 * close;
+        const fin90d = volMed90 * close;
+
+        // Volume financeiro diário sustentado (evita que um único dia de distorção infle o ativo como no caso de GPRO34)
+        const volFinSustentado = fin30d > 0
+          ? (fin10d * 0.35 + fin30d * 0.45 + (fin90d || fin30d) * 0.20)
+          : fin10d;
+
         const gap = Number(row.gap) || 0;
         const isIndex = ((100 - rsi) + (100 - stoch)) / 2;
-        const liquidez = calcularLiquidez(volMed, close, row.volume);
+        const { liquidez, avisoLiquidez, numNegociosEst } = calcularLiquidez(volFinSustentado, finHoje, classe);
 
         const { sinais, explicacoes, score, potencial } = gerarSinais(close, rsi, stoch, macdHist, ema20, ema50, ema200);
+
+        // Volume exibido: volume de hoje se houve negociação no pregão, ou sustentado caso seja pré-abertura
+        const volumeExibicao = finHoje > 0 ? finHoje : volFinSustentado;
 
         opportunities.push({
           Ticker: rawTicker,
@@ -299,7 +421,11 @@ app.post('/api/scan', async (req, res) => {
           Classe: classe,
           Setor: setor,
           Preco: Number(close.toFixed(2)),
-          Volume: Number(volFin.toFixed(0)),
+          Volume: Number(volumeExibicao.toFixed(0)),
+          VolHoje: Number(finHoje.toFixed(0)),
+          VolMedio: Number(volFinSustentado.toFixed(0)),
+          NumNegociosEst: numNegociosEst,
+          AvisoLiquidez: avisoLiquidez,
           Queda_Dia: Number(change.toFixed(2)),
           Gap: Number(gap.toFixed(2)),
           IS: Number(isIndex.toFixed(1)),
@@ -323,6 +449,7 @@ app.post('/api/scan', async (req, res) => {
         if (!opportunities.some(o => o.Ticker === item.ticker)) {
           const isIndex = ((100 - item.rsi) + (100 - item.stoch)) / 2;
           const { sinais, explicacoes, score, potencial } = gerarSinais(item.close, item.rsi, item.stoch, 0.2, item.ema20, item.ema50, item.ema200);
+          const { liquidez, avisoLiquidez, numNegociosEst } = calcularLiquidez(item.vol, item.vol, item.classe);
           opportunities.push({
             Ticker: item.ticker,
             Empresa: item.name,
@@ -330,6 +457,10 @@ app.post('/api/scan', async (req, res) => {
             Setor: (item as any).setor || resolverSetor(item.ticker, undefined, item.classe),
             Preco: item.close,
             Volume: item.vol,
+            VolHoje: item.vol,
+            VolMedio: item.vol,
+            NumNegociosEst: numNegociosEst,
+            AvisoLiquidez: avisoLiquidez,
             Queda_Dia: item.change,
             Gap: item.gap,
             IS: Number(isIndex.toFixed(1)),
@@ -339,7 +470,7 @@ app.post('/api/scan', async (req, res) => {
             Score: score,
             Sinais: sinais.join(', '),
             Explicacoes: explicacoes,
-            Liquidez: calcularLiquidez(item.vol / item.close, item.close, item.vol / item.close),
+            Liquidez: liquidez,
             EMA20: item.ema20,
             EMA50: item.ema50,
             EMA200: item.ema200,
@@ -350,6 +481,11 @@ app.post('/api/scan', async (req, res) => {
 
     // Sort by IS descending (most oversold first)
     opportunities.sort((a, b) => b.IS - a.IS);
+
+    // Update global scan cache for fast indicators reconciliation
+    opportunities.forEach(op => {
+      scanCacheByTicker.set(op.Ticker, op);
+    });
 
     res.json({
       success: true,
@@ -442,7 +578,57 @@ app.get('/api/history/:ticker', async (req, res) => {
       }
     }
 
-    res.json({ ticker, timeframe, candles });
+    // Reconcile with official technical indicators
+    let indicators: any = undefined;
+    const cached = scanCacheByTicker.get(ticker);
+    if (cached) {
+      indicators = {
+        close: cached.Preco,
+        ema20: cached.EMA20,
+        ema50: cached.EMA50,
+        ema200: cached.EMA200,
+        rsi: cached.RSI14,
+        stochK: cached.Stoch,
+      };
+    }
+
+    if (!indicators?.ema200) {
+      try {
+        const tvResp = await fetch('https://scanner.tradingview.com/brazil/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+          body: JSON.stringify({
+            symbols: { query: { types: [] }, tickers: [`BMFBOVESPA:${ticker}`] },
+            columns: ['close', 'EMA20', 'EMA50', 'EMA200', 'SMA200', 'RSI', 'Stoch.K']
+          }),
+          signal: AbortSignal.timeout(3000)
+        });
+        if (tvResp.ok) {
+          const tvJson = await tvResp.json();
+          const row = tvJson.data?.[0]?.d;
+          if (row) {
+            indicators = {
+              close: Number(row[0]?.toFixed(2)) || indicators?.close,
+              ema20: typeof row[1] === 'number' && !isNaN(row[1]) && row[1] > 0 ? Number(row[1].toFixed(2)) : indicators?.ema20,
+              ema50: typeof row[2] === 'number' && !isNaN(row[2]) && row[2] > 0 ? Number(row[2].toFixed(2)) : indicators?.ema50,
+              ema200: typeof row[3] === 'number' && !isNaN(row[3]) && row[3] > 0 ? Number(row[3].toFixed(2)) : indicators?.ema200,
+              sma200: typeof row[4] === 'number' && !isNaN(row[4]) && row[4] > 0 ? Number(row[4].toFixed(2)) : indicators?.sma200,
+              rsi: typeof row[5] === 'number' && !isNaN(row[5]) ? Number(row[5].toFixed(1)) : indicators?.rsi,
+              stochK: typeof row[6] === 'number' && !isNaN(row[6]) ? Number(row[6].toFixed(1)) : indicators?.stochK,
+            };
+          }
+        }
+      } catch (e) {
+        // keep fallback
+      }
+    }
+
+    // Align latest candle close if recent real-time quote is available
+    if (candles.length > 0 && indicators?.close && Math.abs(candles[candles.length - 1].close - indicators.close) < indicators.close * 0.15) {
+      candles[candles.length - 1].close = indicators.close;
+    }
+
+    res.json({ ticker, timeframe, candles, indicators });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Erro ao obter dados históricos' });
   }

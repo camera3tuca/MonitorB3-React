@@ -57,6 +57,9 @@ export const TechnicalChart: React.FC<TechnicalChartProps> = ({
       if (typeof c.high === 'number' && !isNaN(c.high) && isFinite(c.high)) prices.push(c.high);
       if (typeof c.open === 'number' && !isNaN(c.open) && isFinite(c.open)) prices.push(c.open);
       if (typeof c.close === 'number' && !isNaN(c.close) && isFinite(c.close)) prices.push(c.close);
+      if (showEMA20 && typeof c.ema20 === 'number' && !isNaN(c.ema20) && isFinite(c.ema20)) prices.push(c.ema20);
+      if (showEMA50 && typeof c.ema50 === 'number' && !isNaN(c.ema50) && isFinite(c.ema50)) prices.push(c.ema50);
+      if (showEMA200 && typeof c.ema200 === 'number' && !isNaN(c.ema200) && isFinite(c.ema200)) prices.push(c.ema200);
       if (typeof c.volume === 'number' && !isNaN(c.volume) && isFinite(c.volume) && c.volume > 0) vols.push(c.volume);
     });
 
@@ -72,7 +75,7 @@ export const TechnicalChart: React.FC<TechnicalChartProps> = ({
       yMax: isNaN(computedYMax) || !isFinite(computedYMax) ? 20 : computedYMax,
       maxVol: isNaN(computedMaxVol) || !isFinite(computedMaxVol) ? 1000 : computedMaxVol
     };
-  }, [visibleCandles, n]);
+  }, [visibleCandles, n, showEMA20, showEMA50, showEMA200]);
 
   const getX = (index: number) => {
     if (n <= 1) return padding.left + (width - padding.left - padding.right) / 2;
@@ -147,7 +150,7 @@ export const TechnicalChart: React.FC<TechnicalChartProps> = ({
               showEMA20 ? 'bg-blue-500/20 border-blue-400 text-blue-300' : 'bg-slate-800 border-slate-700 text-slate-500'
             }`}
           >
-            EMA20
+            EMA20 {activeCandle?.ema20 ? `(R$ ${activeCandle.ema20.toFixed(2)})` : ''}
           </button>
           <button
             onClick={() => setShowEMA50(!showEMA50)}
@@ -155,7 +158,7 @@ export const TechnicalChart: React.FC<TechnicalChartProps> = ({
               showEMA50 ? 'bg-amber-500/20 border-amber-400 text-amber-300' : 'bg-slate-800 border-slate-700 text-slate-500'
             }`}
           >
-            EMA50
+            EMA50 {activeCandle?.ema50 ? `(R$ ${activeCandle.ema50.toFixed(2)})` : ''}
           </button>
           <button
             onClick={() => setShowEMA200(!showEMA200)}
@@ -163,7 +166,7 @@ export const TechnicalChart: React.FC<TechnicalChartProps> = ({
               showEMA200 ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500'
             }`}
           >
-            EMA200
+            EMA200 {activeCandle?.ema200 ? `(R$ ${activeCandle.ema200.toFixed(2)})` : ''}
           </button>
           <button
             onClick={() => setShowBollinger(!showBollinger)}
@@ -201,14 +204,38 @@ export const TechnicalChart: React.FC<TechnicalChartProps> = ({
 
       {/* Info Bar with Active Hover Data */}
       {activeCandle && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60 mb-3 text-xs font-mono">
-          <div><span className="text-slate-400">Data:</span> <strong className="text-white">{activeCandle.date}</strong></div>
-          <div><span className="text-slate-400">Abertura:</span> <strong className="text-slate-200">R$ {activeCandle.open?.toFixed(2)}</strong></div>
-          <div><span className="text-slate-400">Máx:</span> <strong className="text-emerald-400">R$ {activeCandle.high?.toFixed(2)}</strong></div>
-          <div><span className="text-slate-400">Mín:</span> <strong className="text-rose-400">R$ {activeCandle.low?.toFixed(2)}</strong></div>
-          <div><span className="text-slate-400">Fechamento:</span> <strong className="text-white font-bold">R$ {activeCandle.close?.toFixed(2)}</strong></div>
-          <div><span className="text-slate-400">RSI:</span> <strong className={`${(activeCandle.rsi14 || 50) < 30 ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>{activeCandle.rsi14?.toFixed(1) || '-'}</strong></div>
-          <div><span className="text-slate-400">Vol:</span> <strong className="text-cyan-400">{((activeCandle.volume || 0) / 1e6).toFixed(1)}M</strong></div>
+        <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60 mb-3 text-xs font-mono space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+            <div><span className="text-slate-400">Data:</span> <strong className="text-white">{activeCandle.date}</strong></div>
+            <div><span className="text-slate-400">Abertura:</span> <strong className="text-slate-200">R$ {activeCandle.open?.toFixed(2)}</strong></div>
+            <div><span className="text-slate-400">Máx:</span> <strong className="text-emerald-400">R$ {activeCandle.high?.toFixed(2)}</strong></div>
+            <div><span className="text-slate-400">Mín:</span> <strong className="text-rose-400">R$ {activeCandle.low?.toFixed(2)}</strong></div>
+            <div><span className="text-slate-400">Fechamento:</span> <strong className="text-white font-bold">R$ {activeCandle.close?.toFixed(2)}</strong></div>
+            <div><span className="text-slate-400">RSI:</span> <strong className={`${(activeCandle.rsi14 || 50) < 30 ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>{activeCandle.rsi14?.toFixed(1) || '-'}</strong></div>
+            <div><span className="text-slate-400">Vol:</span> <strong className="text-cyan-400">{((activeCandle.volume || 0) / 1e6).toFixed(1)}M</strong></div>
+          </div>
+
+          {activeCandle.ema200 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-700/50 text-[11px]">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400">Posição vs EMA200:</span>
+                {activeCandle.close >= activeCandle.ema200 ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40">
+                    ▲ ACIMA DA EMA 200 (+{(((activeCandle.close - activeCandle.ema200) / activeCandle.ema200) * 100).toFixed(2)}% | R$ +{(activeCandle.close - activeCandle.ema200).toFixed(2)})
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40">
+                    ▼ ABAIXO DA EMA 200 ({(((activeCandle.close - activeCandle.ema200) / activeCandle.ema200) * 100).toFixed(2)}% | R$ {(activeCandle.close - activeCandle.ema200).toFixed(2)})
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 text-slate-400">
+                {activeCandle.ema20 && <span>EMA20: <strong className="text-blue-400">R$ {activeCandle.ema20.toFixed(2)}</strong></span>}
+                {activeCandle.ema50 && <span>EMA50: <strong className="text-amber-400">R$ {activeCandle.ema50.toFixed(2)}</strong></span>}
+                {activeCandle.ema200 && <span>EMA200: <strong className="text-emerald-400">R$ {activeCandle.ema200.toFixed(2)}</strong></span>}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

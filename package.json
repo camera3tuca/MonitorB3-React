@@ -14,20 +14,6 @@
     "@capacitor/core": "^8.5.0",
     "@capacitor/splash-screen": "^8.0.2",
     "@capacitor/status-bar": "^8.0.3",
-    "clsx": "^2.1.1",
-    "cors": "^2.8.6",
-    "d3": "^7.9.0",
-    "express": "^5.2.1",
-    "lucide-react": "^1.31.0",
-    "motion": "^13.1.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "recharts": "^3.10.1",
-    "tailwind-merge": "^3.6.0"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^8.5.0",
-    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/cors": "^2.8.19",
     "@types/d3": "^7.4.3",
@@ -36,11 +22,25 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "d3": "^7.9.0",
     "esbuild": "^0.28.2",
-    "sharp": "^0.35.3",
+    "express": "^5.2.1",
+    "lucide-react": "^1.31.0",
+    "motion": "^13.1.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vite": "^8.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "sharp": "^0.35.3"
   }
 }

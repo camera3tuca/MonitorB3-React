@@ -100,6 +100,8 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
         return <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold px-2 py-0.5 rounded">BDR</span>;
       case 'ETF':
         return <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold px-2 py-0.5 rounded">ETF</span>;
+      case 'FII':
+        return <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded">FII</span>;
       default:
         return <span className="bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold px-2 py-0.5 rounded">Ação</span>;
     }
@@ -181,7 +183,7 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
                 </div>
               </th>
               <th className="py-3 px-3">Empresa</th>
-              <th className="py-3 px-2 text-center cursor-pointer hover:text-white" onClick={() => handleSort('Liquidez')}>
+              <th className="py-3 px-2 text-center cursor-pointer hover:text-white" onClick={() => handleSort('Liquidez')} title="Liquidez Real Executada (1 a 10) baseada no volume diário real. Mostra a capacidade de comprar/vender sem spread largo e slippage no Profit.">
                 <div className="flex items-center justify-center gap-1">
                   Liq. {sortField === 'Liquidez' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
@@ -271,11 +273,30 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
 
                     {/* Liquidez */}
                     <td className="py-3 px-2 text-center whitespace-nowrap">
-                      <span className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded font-mono font-bold text-[10px] ${
-                        row.Liquidez >= 7 ? 'bg-cyan-500/20 text-cyan-300' : row.Liquidez >= 4 ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700 text-slate-400'
-                      }`}>
-                        💧 {row.Liquidez}/10
-                      </span>
+                      <div className="flex items-center justify-center gap-1">
+                        <span
+                          className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded font-mono font-bold text-[10px] cursor-help ${
+                            row.Liquidez >= 7
+                              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                              : row.Liquidez >= 5
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : row.Liquidez >= 3
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                          }`}
+                          title={row.AvisoLiquidez || `Liquidez ${row.Liquidez}/10 | Vol. Hoje: ${formatVolume(row.VolHoje || row.Volume)} | Média: ${formatVolume(row.VolMedio || row.Volume)}`}
+                        >
+                          💧 {row.Liquidez}/10
+                        </span>
+                        {row.Liquidez <= 2 && (
+                          <span
+                            className="text-[10px] cursor-help"
+                            title={row.AvisoLiquidez || 'Atenção: Ordens no book do Profit são de formador de mercado. Volume financeiro real é crítico (< R$ 150k/dia).'}
+                          >
+                            ⚠️
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Preco */}
@@ -312,7 +333,14 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
 
                     {/* Volume */}
                     <td className="py-3 px-3 text-right font-mono text-slate-300 whitespace-nowrap">
-                      {formatVolume(row.Volume)}
+                      <div className="flex flex-col items-end">
+                        <span className="text-white font-medium">{formatVolume(row.Volume)}</span>
+                        {row.VolMedio && Math.abs(row.VolMedio - row.Volume) > (row.Volume * 0.35) && (
+                          <span className="text-[9px] text-slate-400 font-normal" title={`Média 30d sustentada: ${formatVolume(row.VolMedio)}`}>
+                            Méd: {formatVolume(row.VolMedio)}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Potencial */}

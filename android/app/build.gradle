@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.monitorb3.app"
+    namespace = "com.sciencebit.monitorb3"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.monitorb3.app"
+        applicationId "com.sciencebit.monitorb3"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 6
+        versionName "1.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,17 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            storePassword 'monitorb3pass'
+            keyAlias 'monitorb3'
+            keyPassword 'monitorb3pass'
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

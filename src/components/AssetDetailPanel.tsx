@@ -121,6 +121,16 @@ export const AssetDetailPanel: React.FC<AssetDetailPanelProps> = ({
           <div className="bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl">
             <span className="text-slate-400">Score:</span> <strong className="text-amber-400">{selectedOpp.Score}/10</strong>
           </div>
+          <div className="bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+            <span className="text-slate-400">Liq:</span>
+            <strong className={
+              selectedOpp.Liquidez >= 7 ? 'text-cyan-400' :
+              selectedOpp.Liquidez >= 5 ? 'text-emerald-400' :
+              selectedOpp.Liquidez >= 3 ? 'text-amber-400' : 'text-rose-400'
+            }>
+              💧 {selectedOpp.Liquidez}/10
+            </strong>
+          </div>
 
           {onClose && (
             <button
@@ -135,6 +145,46 @@ export const AssetDetailPanel: React.FC<AssetDetailPanelProps> = ({
           )}
         </div>
       </div>
+
+      {/* Alerta de Liquidez / Negócios para BDRs e Small Caps */}
+      {selectedOpp.AvisoLiquidez && (
+        <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl p-3.5 text-xs text-amber-200">
+          <div className="flex items-start gap-2.5">
+            <span className="text-base shrink-0">⚠️</span>
+            <div className="flex-1">
+              <div className="font-semibold text-amber-300 flex items-center gap-2">
+                <span>Alerta de Liquidez (Profit / B3)</span>
+                <span className="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                  {selectedOpp.Liquidez <= 1 ? 'Liquidez Muito Baixa (1/10)' : 'Liquidez Moderada (2/10)'}
+                </span>
+              </div>
+              <p className="mt-1 text-amber-100">{selectedOpp.AvisoLiquidez}</p>
+              
+              <div className="mt-2.5 bg-slate-900/80 rounded-lg p-2.5 border border-amber-500/20 text-[11px] space-y-1.5">
+                <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                  <span>💡 Por que aparecem compradores e vendedores no Profit se a liquidez é 1 ou 2?</span>
+                </div>
+                <p className="text-slate-300 leading-relaxed">
+                  No <strong>Profit</strong>, você vê as linhas do <strong>Livro de Ofertas (Book)</strong>. Porém, nesses BDRs a maioria dessas ordens são lotes residuais pequenos mantidos pelo <strong>Formador de Mercado (Market Maker)</strong> com <strong>spread largo</strong> (diferença entre o preço de compra e venda).
+                </p>
+                <p className="text-slate-300 leading-relaxed">
+                  O <strong>Volume Real Executado</strong> de hoje foi de apenas <strong className="text-white">R$ {((selectedOpp.VolHoje || selectedOpp.Volume) / 1000).toFixed(1)}k</strong>. Se tentar comprar ou vender R$ 5.000 ou mais a mercado, você consumirá vários níveis do book com grande prejuízo de spread (slippage) ou terá dificuldade para sair da posição.
+                </p>
+                <div className="pt-1 flex flex-wrap gap-x-4 gap-y-1 text-amber-200 font-mono text-[11px]">
+                  {selectedOpp.NumNegociosEst && (
+                    <span>Negócios est.: <strong>~{selectedOpp.NumNegociosEst}/dia</strong></span>
+                  )}
+                  <span>Vol. Hoje: <strong>R$ {((selectedOpp.VolHoje || selectedOpp.Volume) / 1000).toFixed(1)}k</strong></span>
+                  {selectedOpp.VolMedio && (
+                    <span>Média Diária: <strong>R$ {(selectedOpp.VolMedio / 1000).toFixed(1)}k</strong></span>
+                  )}
+                  <span className="text-cyan-300 font-sans font-medium">Dica: Use o slider de Liquidez 3+ ou 4+ para focar em ativos com maior fluxo.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Analysis Navigation Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-800 scrollbar-none text-xs select-none">

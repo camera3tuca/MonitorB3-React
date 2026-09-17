@@ -30,7 +30,7 @@ import {
   runScannerBacktest
 } from './utils/indicators';
 import { getSectorStyle } from './utils/sectorUtils';
-import { getApiUrl } from './utils/api';
+import { getApiUrl, fetchScannerData, clearAppCacheAndReload } from './utils/api';
 
 import {
   Activity,
@@ -55,8 +55,10 @@ import {
 } from 'lucide-react';
 
 export const App: React.FC = () => {
+  const allClasses: AssetClass[] = ['Ação', 'BDR', 'ETF', 'FII'];
+
   // Filters State
-  const [selectedClasses, setSelectedClasses] = useState<AssetClass[]>(['Ação', 'BDR', 'ETF']);
+  const [selectedClasses, setSelectedClasses] = useState<AssetClass[]>(['Ação', 'BDR', 'ETF', 'FII']);
   const [selectedSector, setSelectedSector] = useState<string>('all');
   const [filterEMA20, setFilterEMA20] = useState<boolean>(false);
   const [filterEMA50, setFilterEMA50] = useState<boolean>(false);
@@ -68,6 +70,8 @@ export const App: React.FC = () => {
   const [opportunities, setOpportunities] = useState<AssetOpportunity[]>([]);
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [selectedTicker, setSelectedTicker] = useState<string | null>('PETR4');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [dataSource, setDataSource] = useState<'server' | 'direct' | 'cache'>('server');
 
   // Active Asset Analysis State
   const [timeframe, setTimeframe] = useState<string>('1d');
@@ -80,33 +84,41 @@ export const App: React.FC = () => {
   const [fundamentals, setFundamentals] = useState<FundamentalsData | null>(null);
   const [news, setNews] = useState<NewsArticle[]>([]);
 
-  // Toggle Asset Class filter
+  // Toggle or isolate Asset Class filter
   const handleToggleClass = (c: AssetClass) => {
+    // If all classes are currently selected, tapping a specific class isolates it to view ONLY that class
+    if (selectedClasses.length === allClasses.length) {
+      setSelectedClasses([c]);
+      return;
+    }
+
     if (selectedClasses.includes(c)) {
       if (selectedClasses.length > 1) {
         setSelectedClasses(selectedClasses.filter((item) => item !== c));
+      } else {
+        // If clicking the only active class, reset to all
+        setSelectedClasses(allClasses);
       }
     } else {
       setSelectedClasses([...selectedClasses, c]);
     }
   };
 
-  // Fetch opportunities scanner
+  const handleSelectAllClasses = () => {
+    setSelectedClasses(allClasses);
+  };
+
+  // Fetch opportunities scanner with smart fallback
   const fetchScanner = async () => {
     setIsScanning(true);
     try {
-      const res = await fetch(getApiUrl('/api/scan'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classes: selectedClasses })
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && Array.isArray(json.data)) {
-          setOpportunities(json.data);
-          if (!selectedTicker && json.data.length > 0) {
-            setSelectedTicker(json.data[0].Ticker);
-          }
+      const result = await fetchScannerData(selectedClasses);
+      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        setOpportunities(result.data);
+        setLastUpdated(new Date(result.timestamp));
+        setDataSource(result.source);
+        if (!selectedTicker && result.data.length > 0) {
+          setSelectedTicker(result.data[0].Ticker);
         }
       }
     } catch (err) {
@@ -118,7 +130,14 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     fetchScanner();
-  }, []);
+
+    // Auto-refresh quotes every 60 seconds
+    const interval = setInterval(() => {
+      fetchScanner();
+    }, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [selectedClasses]);
 
   // Fetch selected ticker historical candles and details
   useEffect(() => {
@@ -134,7 +153,15 @@ export const App: React.FC = () => {
         if (histRes.ok && isMounted) {
           const histJson = await histRes.json();
           if (histJson.candles && Array.isArray(histJson.candles)) {
-            const enriched = enrichCandles(histJson.candles);
+            const opp = opportunities.find(o => o.Ticker === selectedTicker);
+            const anchors = {
+              ema20: histJson.indicators?.ema20 ?? opp?.EMA20,
+              ema50: histJson.indicators?.ema50 ?? opp?.EMA50,
+              ema200: histJson.indicators?.ema200 ?? opp?.EMA200,
+              rsi14: histJson.indicators?.rsi ?? opp?.RSI14,
+              stochK: histJson.indicators?.stochK ?? opp?.Stoch,
+            };
+            const enriched = enrichCandles(histJson.candles, anchors);
             setCandles(enriched);
           }
         }
@@ -193,8 +220,8 @@ export const App: React.FC = () => {
 
   // Selected Opportunity Object
   const selectedOpp = useMemo(() => {
-    return filteredOpportunities.find((o) => o.Ticker === selectedTicker) || filteredOpportunities[0] || null;
-  }, [filteredOpportunities, selectedTicker]);
+    return opportunities.find((o) => o.Ticker === selectedTicker) || filteredOpportunities.find((o) => o.Ticker === selectedTicker) || filteredOpportunities[0] || null;
+  }, [opportunities, filteredOpportunities, selectedTicker]);
 
   // Computed Indicators for Active Asset
   const fibonacci: FibonacciLevels = useMemo(() => {
@@ -228,13 +255,19 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Top Navigation Header */}
-      <Header />
+      <Header
+        onRefresh={fetchScanner}
+        isRefreshing={isScanning}
+        lastUpdated={lastUpdated}
+        dataSource={dataSource}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
         {/* Scanner Filters */}
         <ScannerFilters
           selectedClasses={selectedClasses}
           onToggleClass={handleToggleClass}
+          onSelectAllClasses={handleSelectAllClasses}
           selectedSector={selectedSector}
           setSelectedSector={setSelectedSector}
           availableSectors={availableSectors}
@@ -304,8 +337,15 @@ export const App: React.FC = () => {
             
             <div className="flex items-center gap-3">
               <span className="bg-slate-800/80 border border-slate-750 text-slate-300 px-2.5 py-1 rounded-lg font-medium text-[11px]">
-                Versão 1.2 Pro
+                Versão 1.0.2 (Build 3)
               </span>
+              <button
+                onClick={clearAppCacheAndReload}
+                title="Limpar cache do navegador / WebView e recarregar dados novos"
+                className="text-slate-400 hover:text-white underline text-[11px] cursor-pointer transition"
+              >
+                Limpar Cache
+              </button>
               <span className="text-slate-600 hidden sm:inline">|</span>
               <span className="text-slate-400">
                 © {new Date().getFullYear()} Monitor B3. Todos os direitos reservados.

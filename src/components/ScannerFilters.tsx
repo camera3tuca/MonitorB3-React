@@ -6,6 +6,7 @@ import { getSectorStyle } from '../utils/sectorUtils';
 interface ScannerFiltersProps {
   selectedClasses: AssetClass[];
   onToggleClass: (classe: AssetClass) => void;
+  onSelectAllClasses?: () => void;
   selectedSector: string;
   setSelectedSector: (sector: string) => void;
   availableSectors: [string, number][];
@@ -28,6 +29,7 @@ interface ScannerFiltersProps {
 export const ScannerFilters: React.FC<ScannerFiltersProps> = ({
   selectedClasses,
   onToggleClass,
+  onSelectAllClasses,
   selectedSector,
   setSelectedSector,
   availableSectors,
@@ -46,7 +48,17 @@ export const ScannerFilters: React.FC<ScannerFiltersProps> = ({
   totalFiltered,
   totalTotal,
 }) => {
-  const classesList: AssetClass[] = ['Ação', 'BDR', 'ETF'];
+  const classesList: AssetClass[] = ['Ação', 'BDR', 'ETF', 'FII'];
+  const allSelected = classesList.every((c) => selectedClasses.includes(c));
+
+  const getClassLabel = (c: AssetClass) => {
+    switch (c) {
+      case 'Ação': return 'Ações';
+      case 'BDR': return 'BDRs';
+      case 'ETF': return 'ETFs';
+      case 'FII': return 'FIIs';
+    }
+  };
 
   return (
     <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 lg:p-5 shadow-xl mb-6 space-y-4">
@@ -60,21 +72,36 @@ export const ScannerFilters: React.FC<ScannerFiltersProps> = ({
               <Layers className="w-3.5 h-3.5 text-blue-400" />
               Universo:
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                id="btn-filter-class-all"
+                onClick={onSelectAllClasses}
+                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition border cursor-pointer ${
+                  allSelected
+                    ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-900/30'
+                    : 'bg-slate-900/60 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                }`}
+              >
+                Todos
+              </button>
               {classesList.map((c) => {
                 const active = selectedClasses.includes(c);
                 return (
                   <button
+                    type="button"
                     key={c}
                     id={`btn-filter-class-${c.toLowerCase()}`}
                     onClick={() => onToggleClass(c)}
                     className={`px-3 py-1 text-xs font-bold rounded-lg transition border cursor-pointer ${
-                      active
+                      active && !allSelected
                         ? 'bg-blue-600 border-blue-500 text-white shadow-md shadow-blue-900/30'
+                        : active && allSelected
+                        ? 'bg-blue-950/60 border-blue-500/40 text-blue-300 hover:text-white'
                         : 'bg-slate-900/60 border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600'
                     }`}
                   >
-                    {c}s
+                    {getClassLabel(c)}
                   </button>
                 );
               })}
@@ -120,7 +147,16 @@ export const ScannerFilters: React.FC<ScannerFiltersProps> = ({
           </div>
 
           {/* Slider de Liquidez Mínima */}
-          <div className="flex items-center gap-2.5 bg-slate-900/70 px-3.5 py-1.5 rounded-xl border border-slate-700/70 text-xs">
+          <div
+            className="flex items-center gap-2.5 bg-slate-900/70 px-3.5 py-1.5 rounded-xl border border-slate-700/70 text-xs"
+            title={
+              minLiquidez <= 1
+                ? 'Exibindo todos os ativos escaneados'
+                : minLiquidez <= 3
+                ? 'Filtro básico: oculta ativos com volume diário muito residual (< R$ 25k/dia)'
+                : 'Filtro recomendado: ativos com bom fluxo sustentado na B3 (> R$ 60k a R$ 400k+/dia)'
+            }
+          >
             <Droplets className="w-3.5 h-3.5 text-cyan-400" />
             <span className="text-slate-400 font-medium">Liquidez:</span>
             <input
@@ -132,7 +168,13 @@ export const ScannerFilters: React.FC<ScannerFiltersProps> = ({
               onChange={(e) => setMinLiquidez(Number(e.target.value))}
               className="w-20 accent-cyan-400 h-1.5 bg-slate-700 rounded-lg cursor-pointer"
             />
-            <span className="font-bold text-cyan-300 font-mono w-4">{minLiquidez}+</span>
+            <span className={`font-bold font-mono text-[11px] px-1.5 py-0.5 rounded whitespace-nowrap ${
+              minLiquidez >= 6 ? 'bg-cyan-500/20 text-cyan-300' :
+              minLiquidez >= 4 ? 'bg-emerald-500/20 text-emerald-300' :
+              minLiquidez >= 2 ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-400'
+            }`}>
+              {minLiquidez}+ {minLiquidez === 1 ? '(Todas)' : minLiquidez >= 5 ? '(Forte)' : minLiquidez >= 3 ? '(Boa)' : '(Básica)'}
+            </span>
           </div>
 
           {/* Toggle de Backtests Históricos */}

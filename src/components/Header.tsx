@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingDown, Clock, Info, ShieldCheck, ChevronDown, ChevronUp, BookOpen, Sparkles, Globe, ExternalLink } from 'lucide-react';
+import { TrendingDown, Clock, Info, ShieldCheck, ChevronDown, ChevronUp, BookOpen, Sparkles, Globe, ExternalLink, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface MarketStatus {
@@ -10,7 +10,19 @@ interface MarketStatus {
   dotClass: string;
 }
 
-export const Header: React.FC = () => {
+export interface HeaderProps {
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  lastUpdated?: Date | null;
+  dataSource?: 'server' | 'direct' | 'cache';
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  onRefresh,
+  isRefreshing = false,
+  lastUpdated,
+  dataSource = 'server'
+}) => {
   const [horaBrasilia, setHoraBrasilia] = useState<string>('');
   const [marketStatus, setMarketStatus] = useState<MarketStatus>({
     status: 'fechada',
@@ -164,6 +176,34 @@ export const Header: React.FC = () => {
             <span>Timeframe: <strong className="text-white">Diário / 6M</strong></span>
           </div>
 
+          {/* Manual Refresh Button & Last Updated Timestamp */}
+          {onRefresh && (
+            <div className="flex items-center gap-1.5">
+              <button
+                id="btn-manual-refresh"
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                title="Atualizar cotações e scanner da B3 agora"
+                className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-50 text-white font-semibold px-3 py-1.5 rounded-lg shadow-sm transition cursor-pointer text-xs"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-200' : ''}`} />
+                <span>{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
+              </button>
+              {lastUpdated && (
+                <div
+                  title={`Fonte de dados: ${dataSource === 'server' ? 'Servidor Nuvem B3' : dataSource === 'direct' ? 'Feed B3 Direto' : 'Cache Local Offline'}`}
+                  className="hidden sm:flex items-center gap-1 bg-slate-900/80 border border-slate-700/80 px-2.5 py-1.5 rounded-lg text-slate-300 text-[11px]"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-slate-400">Atualizado:</span>
+                  <strong className="font-mono text-white">
+                    {lastUpdated.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </strong>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Guide toggle button */}
           <button
             id="btn-toggle-guide"
@@ -171,19 +211,20 @@ export const Header: React.FC = () => {
             className="flex items-center gap-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 hover:text-blue-200 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer"
           >
             <BookOpen className="w-3.5 h-3.5" />
-            <span>Guia de Indicadores</span>
+            <span>Guia</span>
             {guiaAberto ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
-          {/* App Brand Badge with Logo */}
+          {/* App Brand Badge with Logo & Version */}
           <div
             id="brand-logo-badge"
+            title="Monitor B3 - Versão 1.0.2 (Build 3)"
             className="flex items-center gap-2 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-lg text-slate-300 shadow-sm"
           >
             <img src="/icon.svg" alt="Monitor B3" className="w-4 h-4 rounded flex-shrink-0" />
             <span className="font-semibold text-white tracking-wide">Monitor B3</span>
             <span className="bg-blue-500/25 text-blue-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-500/30">
-              PRO
+              v1.0.2
             </span>
           </div>
         </div>

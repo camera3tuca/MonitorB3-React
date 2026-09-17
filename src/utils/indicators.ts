@@ -1,11 +1,51 @@
 import { HistoricalCandle, FibonacciLevels, TripleScreenResult, MinerviniResult, MLPredictionResult, RLAgentResult, FlowResult, BacktestResult } from '../types';
 
-export function calculateEMA(values: number[], period: number): number[] {
+export interface TechnicalAnchors {
+  ema20?: number;
+  ema50?: number;
+  ema200?: number;
+  rsi14?: number;
+  stochK?: number;
+  stochD?: number;
+}
+
+export function calculateEMA(values: number[], period: number, targetLatest?: number): number[] {
   if (values.length === 0) return [];
   const k = 2 / (period + 1);
   const ema: number[] = new Array(values.length);
-  
-  // Initial SMA for first period elements or initial value
+
+  // If we have an official anchor from the exchange (e.g. TradingView EMA200)
+  if (typeof targetLatest === 'number' && !isNaN(targetLatest) && targetLatest > 0) {
+    if (values.length < period) {
+      // Backward exponential reconstruction: exactly matches targetLatest on the final bar
+      // and smoothly projects the exponential curve backwards without false distortion.
+      ema[values.length - 1] = targetLatest;
+      for (let i = values.length - 2; i >= 0; i--) {
+        ema[i] = (ema[i + 1] - values[i + 1] * k) / (1 - k);
+      }
+      return ema;
+    } else {
+      // Forward calculation followed by end-point alignment with smooth tapering
+      let sum = 0;
+      for (let i = 0; i < period; i++) sum += values[i];
+      ema[period - 1] = sum / period;
+      for (let i = 0; i < period - 1; i++) ema[i] = sum / period;
+      for (let i = period; i < values.length; i++) {
+        ema[i] = values[i] * k + ema[i - 1] * (1 - k);
+      }
+      const lastIdx = values.length - 1;
+      const diff = targetLatest - ema[lastIdx];
+      const taperLen = Math.min(period, values.length);
+      for (let i = 0; i < values.length; i++) {
+        const weight = Math.max(0, (i - (values.length - 1 - taperLen)) / taperLen);
+        ema[i] = ema[i] + diff * weight;
+      }
+      ema[lastIdx] = targetLatest;
+      return ema;
+    }
+  }
+
+  // Standard forward EMA when no anchor is provided
   let sum = 0;
   const initialLen = Math.min(values.length, period);
   for (let i = 0; i < initialLen; i++) {
@@ -144,34 +184,45 @@ export function calculateFibonacci(candles: HistoricalCandle[]): FibonacciLevels
   return { high, low, fib0, fib236, fib382, fib500, fib618, fib786, fib100, currentNear };
 }
 
-export function enrichCandles(rawCandles: { date: string; timestamp: number; open: number; high: number; low: number; close: number; volume: number }[]): HistoricalCandle[] {
+export function enrichCandles(
+  rawCandles: { date: string; timestamp: number; open: number; high: number; low: number; close: number; volume: number }[],
+  anchors?: TechnicalAnchors
+): HistoricalCandle[] {
   if (!rawCandles || rawCandles.length === 0) return [];
   const closes = rawCandles.map(c => c.close);
   const highs = rawCandles.map(c => c.high);
   const lows = rawCandles.map(c => c.low);
 
-  const ema20 = calculateEMA(closes, 20);
-  const ema50 = calculateEMA(closes, 50);
-  const ema200 = calculateEMA(closes, 200);
+  const ema20 = calculateEMA(closes, 20, anchors?.ema20);
+  const ema50 = calculateEMA(closes, 50, anchors?.ema50);
+  const ema200 = calculateEMA(closes, 200, anchors?.ema200);
   const rsi14 = calculateRSI(closes, 14);
   const { k: stochK, d: stochD } = calculateStochastic(highs, lows, closes, 14, 3);
   const { macdLine, signalLine, histogram } = calculateMACD(closes, 12, 26, 9);
   const { upper: bbUpper, lower: bbLower, basis: bbBasis } = calculateBollingerBands(closes, 20, 2);
 
+  // Sync latest candle RSI and Stoch if official exchange anchor is available
+  if (anchors?.rsi14 && rsi14.length > 0) {
+    rsi14[rsi14.length - 1] = anchors.rsi14;
+  }
+  if (anchors?.stochK && stochK.length > 0) {
+    stochK[stochK.length - 1] = anchors.stochK;
+  }
+
   return rawCandles.map((c, i) => ({
     ...c,
-    ema20: ema20[i],
-    ema50: ema50[i],
-    ema200: ema200[i],
-    rsi14: rsi14[i],
-    stochK: stochK[i],
-    stochD: stochD[i],
-    macd: macdLine[i],
-    macdSignal: signalLine[i],
-    macdHist: histogram[i],
-    bbUpper: bbUpper[i],
-    bbLower: bbLower[i],
-    bbBasis: bbBasis[i],
+    ema20: Number(ema20[i]?.toFixed(2)),
+    ema50: Number(ema50[i]?.toFixed(2)),
+    ema200: Number(ema200[i]?.toFixed(2)),
+    rsi14: Number(rsi14[i]?.toFixed(1)),
+    stochK: Number(stochK[i]?.toFixed(1)),
+    stochD: Number(stochD[i]?.toFixed(1)),
+    macd: Number(macdLine[i]?.toFixed(2)),
+    macdSignal: Number(signalLine[i]?.toFixed(2)),
+    macdHist: Number(histogram[i]?.toFixed(2)),
+    bbUpper: Number(bbUpper[i]?.toFixed(2)),
+    bbLower: Number(bbLower[i]?.toFixed(2)),
+    bbBasis: Number(bbBasis[i]?.toFixed(2)),
   }));
 }
 
@@ -323,7 +374,8 @@ export function calculateMinervini(candles: HistoricalCandle[]): MinerviniResult
 
   const sma50 = sma50Series[n];
   const sma150 = sma150Series[n];
-  const sma200 = sma200Series[n];
+  // If enriched candle has calibrated ema200 (e.g. from exchange anchor), prefer it over truncated SMA
+  const sma200 = candles[n]?.ema200 || sma200Series[n];
 
   const sma200Past20 = sma200Series[Math.max(0, n - 20)];
   const sma200Slope = sma200 - sma200Past20;
