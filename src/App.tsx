@@ -330,7 +330,9 @@ export const App: React.FC = () => {
                 alt="Monitor Bolsa de Valores"
                 className="w-6 h-6 rounded-lg border border-slate-700 bg-slate-950 p-0.5 flex-shrink-0"
               />
-              <span className="font-semibold text-slate-200">Monitor Bolsa de Valores</span>
+              <span className="font-semibold text-slate-200">Monitor da Bolsa de Valores</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-blue-400 font-semibold">Swing Trade</span>
               <span className="text-slate-600">•</span>
               <span className="text-slate-400">Scanner &amp; Análise Quantitativa</span>
             </div>
@@ -350,6 +352,29 @@ export const App: React.FC = () => {
               <span className="text-slate-400">
                 © {new Date().getFullYear()} Monitor Bolsa de Valores. Todos os direitos reservados.
               </span>
+            </div>
+          </div>
+
+          {/* ScienceBit Logomark Developer Banner */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 shadow-inner">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-400 font-medium">Desenvolvido por:</span>
+              <a
+                href="https://sciencebit.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition inline-flex items-center"
+              >
+                <img
+                  src="/sciencebit-logo.svg"
+                  alt="ScienceBit Computer"
+                  className="h-7 w-auto object-contain"
+                />
+              </a>
+            </div>
+            <div className="text-[11px] text-slate-400 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span>Engenharia de Software, Soluções em Nuvem e Análise Quantitativa</span>
             </div>
           </div>
 

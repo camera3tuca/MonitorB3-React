@@ -123,24 +123,50 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="bg-slate-800/80 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-30 px-4 lg:px-8 py-3.5 shadow-lg">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Title & Brand */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img
             src="/icon.svg"
-            alt="Monitor Bolsa de Valores Logo"
-            className="w-11 h-11 rounded-xl shadow-lg border border-slate-700/80 bg-slate-900 object-cover flex-shrink-0"
+            alt="Monitor da Bolsa de Valores Logo"
+            className="w-12 h-12 md:w-13 md:h-13 rounded-xl shadow-lg border border-slate-700/80 bg-slate-900 object-cover flex-shrink-0"
           />
-          <div>
+          <div className="flex flex-col justify-center">
+            {/* ScienceBit Logomark in Header */}
+            <div className="mb-0.5">
+              <a
+                href="https://sciencebit.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="ScienceBit Computer"
+                className="inline-flex items-center hover:opacity-85 transition"
+              >
+                <img
+                  src="/sciencebit-logo.svg"
+                  alt="ScienceBit Computer"
+                  className="h-4.5 sm:h-5 w-auto object-contain"
+                />
+              </a>
+            </div>
+
+            {/* Main App Title */}
             <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
-                Monitor Bolsa de Valores <span className="text-blue-400 font-medium text-lg">Pro</span>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-white tracking-tight leading-tight">
+                Monitor da Bolsa de Valores
               </h1>
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold px-2 py-0.5 rounded-full">
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0">
                 Ao Vivo
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-medium">
-              Análise Técnica Avançada | Rastreamento de Oportunidades em Tempo Real
-            </p>
+
+            {/* Swing Trade phrase directly below Monitor da Bolsa de Valores */}
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs sm:text-sm font-bold text-blue-400 tracking-wide uppercase">
+                Swing Trade
+              </span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <p className="text-xs text-slate-400 font-medium hidden sm:inline">
+                Análise Técnica Avançada &amp; Rastreamento em Tempo Real
+              </p>
+            </div>
           </div>
         </div>
 
