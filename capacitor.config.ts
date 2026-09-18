@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.sciencebit.monitorb3',
-  appName: 'Monitor B3',
+  appName: 'Monitor Bolsa de Valores',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

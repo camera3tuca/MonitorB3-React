@@ -70,6 +70,18 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
     }
   });
 });
+app.get(["/privacy", "/privacy.html", "/politica-de-privacidade"], (req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.sendFile(import_path.default.join(publicPath, "privacy.html"));
+});
+app.get("/monitorb3-web.zip", (req, res) => {
+  const zipPath = import_path.default.join(publicPath, "monitorb3-web.zip");
+  res.download(zipPath, "monitorb3-web.zip");
+});
+app.get("/download-zip", (req, res) => {
+  const zipPath = import_path.default.join(publicPath, "monitorb3-web.zip");
+  res.download(zipPath, "monitorb3-web.zip");
+});
 var KNOWN_SECTORS = {
   PETR4: "Petr\xF3leo & G\xE1s",
   PETR3: "Petr\xF3leo & G\xE1s",
@@ -942,7 +954,7 @@ async function startServer() {
     });
   }
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Monitor B3 Server running on port ${PORT}`);
+    console.log(`Monitor Bolsa de Valores Server running on port ${PORT}`);
   });
 }
 startServer();

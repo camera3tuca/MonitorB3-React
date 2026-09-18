@@ -126,13 +126,13 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-3">
           <img
             src="/icon.svg"
-            alt="Monitor B3 Logo"
+            alt="Monitor Bolsa de Valores Logo"
             className="w-11 h-11 rounded-xl shadow-lg border border-slate-700/80 bg-slate-900 object-cover flex-shrink-0"
           />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
-                Monitor B3 <span className="text-blue-400 font-medium text-lg">Swing Trade Pro</span>
+                Monitor Bolsa de Valores <span className="text-blue-400 font-medium text-lg">Pro</span>
               </h1>
               <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold px-2 py-0.5 rounded-full">
                 Ao Vivo
@@ -218,13 +218,13 @@ export const Header: React.FC<HeaderProps> = ({
           {/* App Brand Badge with Logo & Version */}
           <div
             id="brand-logo-badge"
-            title="Monitor B3 - Versão 1.0.2 (Build 3)"
+            title="Monitor Bolsa de Valores - Versão 1.0.4"
             className="flex items-center gap-2 bg-slate-900/90 border border-slate-700/80 px-3 py-1.5 rounded-lg text-slate-300 shadow-sm"
           >
-            <img src="/icon.svg" alt="Monitor B3" className="w-4 h-4 rounded flex-shrink-0" />
-            <span className="font-semibold text-white tracking-wide">Monitor B3</span>
+            <img src="/icon.svg" alt="Monitor Bolsa de Valores" className="w-4 h-4 rounded flex-shrink-0" />
+            <span className="font-semibold text-white tracking-wide">Monitor Bolsa</span>
             <span className="bg-blue-500/25 text-blue-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-500/30">
-              v1.0.2
+              v1.0.4
             </span>
           </div>
         </div>

@@ -327,17 +327,17 @@ export const App: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2.5">
               <img
                 src="/icon.svg"
-                alt="Monitor B3"
+                alt="Monitor Bolsa de Valores"
                 className="w-6 h-6 rounded-lg border border-slate-700 bg-slate-950 p-0.5 flex-shrink-0"
               />
-              <span className="font-semibold text-slate-200">Monitor B3 - Swing Trade Pro</span>
+              <span className="font-semibold text-slate-200">Monitor Bolsa de Valores</span>
               <span className="text-slate-600">•</span>
               <span className="text-slate-400">Scanner &amp; Análise Quantitativa</span>
             </div>
             
             <div className="flex items-center gap-3">
               <span className="bg-slate-800/80 border border-slate-750 text-slate-300 px-2.5 py-1 rounded-lg font-medium text-[11px]">
-                Versão 1.0.2 (Build 3)
+                Versão 1.0.4
               </span>
               <button
                 onClick={clearAppCacheAndReload}
@@ -348,7 +348,7 @@ export const App: React.FC = () => {
               </button>
               <span className="text-slate-600 hidden sm:inline">|</span>
               <span className="text-slate-400">
-                © {new Date().getFullYear()} Monitor B3. Todos os direitos reservados.
+                © {new Date().getFullYear()} Monitor Bolsa de Valores. Todos os direitos reservados.
               </span>
             </div>
           </div>

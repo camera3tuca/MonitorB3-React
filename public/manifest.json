@@ -1,7 +1,7 @@
 {
-  "name": "Monitor B3 - Swing Trade Pro",
-  "short_name": "Monitor B3",
-  "description": "Scanner de sobrevenda em tempo real e análise quantitativa da B3 para Swing Trade por ScienceBit (sciencebit.com.br)",
+  "name": "Monitor Bolsa de Valores",
+  "short_name": "Monitor Bolsa",
+  "description": "Monitor de quedas, análise técnica e sinais quantitativos para swing trade por ScienceBit (sciencebit.com.br)",
   "start_url": "/",
   "scope": "/",
   "id": "/",
