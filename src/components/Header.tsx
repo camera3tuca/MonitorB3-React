@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingDown, Clock, Info, ShieldCheck, ChevronDown, ChevronUp, BookOpen, Sparkles, Globe, ExternalLink, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 
 interface MarketStatus {
   status: 'aberta' | 'pre-abertura' | 'leilao' | 'fechada';
@@ -131,18 +130,18 @@ export const Header: React.FC<HeaderProps> = ({
           />
           <div className="flex flex-col justify-center">
             {/* ScienceBit Logomark in Header */}
-            <div className="mb-0.5">
+            <div className="mb-1 flex items-center">
               <a
                 href="https://sciencebit.com.br"
                 target="_blank"
                 rel="noopener noreferrer"
-                title="ScienceBit Computer"
-                className="inline-flex items-center hover:opacity-85 transition"
+                title="ScienceBit Computer - sciencebit.com.br"
+                className="inline-flex items-center hover:opacity-90 transition group"
               >
                 <img
                   src="/sciencebit-logo.svg"
                   alt="ScienceBit Computer"
-                  className="h-4.5 sm:h-5 w-auto object-contain"
+                  className="h-5 sm:h-6 w-auto object-contain filter drop-shadow-sm group-hover:brightness-110 transition"
                 />
               </a>
             </div>
@@ -257,66 +256,61 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Expandable Guide */}
-      <AnimatePresence>
-        {guiaAberto && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="max-w-7xl mx-auto mt-4 pt-4 border-t border-slate-700/60 overflow-hidden"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 pb-2 text-xs">
-              <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
-                <h4 className="font-bold text-blue-400 mb-1 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                  Índice de Sobrevenda (IS)
-                </h4>
-                <p className="text-slate-300 leading-relaxed">
-                  Média harmônica combinada do RSI(14) e Estocástico(14). Valores <strong className="text-emerald-400">&gt; 70</strong> indicam exaustão vendedora e potencial repique.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
-                <h4 className="font-bold text-emerald-400 mb-1 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  RSI &amp; Estocástico
-                </h4>
-                <p className="text-slate-300 leading-relaxed">
-                  RSI &lt; 30 e Estocástico &lt; 20 confirmam sobrevenda técnica extrema. Cruzamentos para cima geram gatilho imediato de compra.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
-                <h4 className="font-bold text-amber-400 mb-1 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  Fibonacci (61.8% Golden Zone)
-                </h4>
-                <p className="text-slate-300 leading-relaxed">
-                  A retração de 61.8% representa a mais forte região de suporte matemático para continuação da tendência primária.
-                </p>
-              </div>
-
-              <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
-                <h4 className="font-bold text-purple-400 mb-1 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                  Triple Screen (Alexander Elder)
-                </h4>
-                <p className="text-slate-300 leading-relaxed">
-                  1ª Tela (Maré: EMA13), 2ª Tela (Onda: EFI2 oscilador) e 3ª Tela (Execução: Buy Stop no topo anterior).
-                </p>
-              </div>
+      {guiaAberto && (
+        <div
+          className="max-w-7xl mx-auto mt-4 pt-4 border-t border-slate-700/60 overflow-hidden transition-all duration-300"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 pb-2 text-xs">
+            <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
+              <h4 className="font-bold text-blue-400 mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                Índice de Sobrevenda (IS)
+              </h4>
+              <p className="text-slate-300 leading-relaxed">
+                Média harmônica combinada do RSI(14) e Estocástico(14). Valores <strong className="text-emerald-400">&gt; 70</strong> indicam exaustão vendedora e potencial repique.
+              </p>
             </div>
 
-            <div className="mt-2 pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[11px] text-slate-400 px-1">
-              <span>Metodologias quantitativas aplicadas aos ativos da B3 (Ações, BDRs e ETFs).</span>
-              <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                Módulo de Estratégias &amp; Filtros Técnicos
-              </span>
+            <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
+              <h4 className="font-bold text-emerald-400 mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                RSI &amp; Estocástico
+              </h4>
+              <p className="text-slate-300 leading-relaxed">
+                RSI &lt; 30 e Estocástico &lt; 20 confirmam sobrevenda técnica extrema. Cruzamentos para cima geram gatilho imediato de compra.
+              </p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
+              <h4 className="font-bold text-amber-400 mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                Fibonacci (61.8% Golden Zone)
+              </h4>
+              <p className="text-slate-300 leading-relaxed">
+                A retração de 61.8% representa a mais forte região de suporte matemático para continuação da tendência primária.
+              </p>
+            </div>
+
+            <div className="bg-slate-900/70 p-3 rounded-xl border border-slate-700/60">
+              <h4 className="font-bold text-purple-400 mb-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                Triple Screen (Alexander Elder)
+              </h4>
+              <p className="text-slate-300 leading-relaxed">
+                1ª Tela (Maré: EMA13), 2ª Tela (Onda: EFI2 oscilador) e 3ª Tela (Execução: Buy Stop no topo anterior).
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-2 pt-2 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[11px] text-slate-400 px-1">
+            <span>Metodologias quantitativas aplicadas aos ativos da B3 (Ações, BDRs e ETFs).</span>
+            <span className="text-slate-300 font-medium flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Módulo de Estratégias &amp; Filtros Técnicos
+            </span>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

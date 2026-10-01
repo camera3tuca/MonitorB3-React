@@ -363,18 +363,19 @@ export const App: React.FC = () => {
                 href="https://sciencebit.com.br"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:opacity-80 transition inline-flex items-center"
+                title="ScienceBit Computer - sciencebit.com.br"
+                className="hover:opacity-90 transition inline-flex items-center group"
               >
                 <img
                   src="/sciencebit-logo.svg"
                   alt="ScienceBit Computer"
-                  className="h-7 w-auto object-contain"
+                  className="h-7 sm:h-8 w-auto object-contain filter drop-shadow group-hover:brightness-110 transition"
                 />
               </a>
             </div>
             <div className="text-[11px] text-slate-400 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-              <span>Engenharia de Software, Soluções em Nuvem e Análise Quantitativa</span>
+              <span>Engenharia de Software • Cloud Run • Streamlit &amp; IoT</span>
             </div>
           </div>
 

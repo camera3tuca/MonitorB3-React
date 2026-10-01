@@ -38,7 +38,7 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.path.startsWith("/api") || req.path === "/" || req.path === "/index.html" || req.path === "/manifest.json" || req.path === "/sw.js") {
+  if (req.path.startsWith("/api") || req.path === "/" || req.path === "/index.html" || req.path === "/manifest.json" || req.path === "/sw.js" || req.path.endsWith(".svg") || req.path.endsWith(".png")) {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");

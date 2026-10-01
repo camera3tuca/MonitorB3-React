@@ -1,44 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="600" height="200">
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='80 12 240 64' width='240' height='64'>
   <defs>
     <style>
-      .brand-science-dark {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 78px;
+      .txt-sci {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-size: 50px;
         font-weight: 800;
-        fill: #0a0f1d;
-        letter-spacing: -1.5px;
-      }
-      .brand-bit-dark {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 78px;
-        font-weight: 800;
-        fill: #0066ff;
         letter-spacing: -1px;
+        fill: #000000;
+        text-anchor: middle;
       }
-      .brand-sub-dark {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 24px;
+      .txt-bit {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-size: 50px;
         font-weight: 800;
-        fill: #0a0f1d;
-        letter-spacing: 12px;
+        letter-spacing: -0.5px;
+        fill: #0055ff;
+      }
+      .txt-comp {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-size: 13.5px;
+        font-weight: 800;
+        letter-spacing: 6px;
+        fill: #000000;
+        text-anchor: middle;
       }
     </style>
   </defs>
 
-  <!-- ScienceBit Main Text -->
-  <g transform="translate(45, 95)">
-    <text class="brand-science-dark" x="0" y="0">Science<tspan class="brand-bit-dark">Bit</tspan></text>
-  </g>
+  <!-- Line 1: ScienceBit perfectly centered at x=201.5 -->
+  <text class='txt-sci' x='201.5' y='52'>Science<tspan class='txt-bit'>Bit</tspan></text>
 
-  <!-- Subtitle: — COMPUTER — -->
-  <g transform="translate(50, 150)">
-    <!-- Left Blue Bar -->
-    <line x1="0" y1="-8" x2="70" y2="-8" stroke="#0066ff" stroke-width="5" stroke-linecap="round"/>
-    
-    <!-- COMPUTER Text -->
-    <text class="brand-sub-dark" x="100" y="0">COMPUTER</text>
-    
-    <!-- Right Blue Bar -->
-    <line x1="430" y1="-8" x2="500" y2="-8" stroke="#0066ff" stroke-width="5" stroke-linecap="round"/>
-  </g>
+  <!-- Line 2: Symmetrically centered bars and COMPUTER -->
+  <line x1='83' y1='71' x2='140' y2='71' stroke='#0055ff' stroke-width='3.5' stroke-linecap='round'/>
+  <text class='txt-comp' x='200' y='75.5'>COMPUTER</text>
+  <line x1='260' y1='71' x2='317' y2='71' stroke='#0055ff' stroke-width='3.5' stroke-linecap='round'/>
 </svg>
