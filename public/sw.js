@@ -1,7 +1,6 @@
-const CACHE_NAME = 'monitor-b3-v5';
+const CACHE_NAME = 'monitor-b3-v7-preview-fix';
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/icon.svg',
   '/icon-192.png',
@@ -13,13 +12,14 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Cache initial add non-blocking warning:', err);
+        console.warn('Cache initial add notice:', err);
       });
     })
   );
 });
 
 self.addEventListener('activate', (event) => {
+  // Purge ALL old caches immediately
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
@@ -40,12 +40,23 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Do not intercept non-GET or dynamic API calls
-  if (event.request.url.includes('/api/') || event.request.method !== 'GET') {
-    return;
+  const url = new URL(event.request.url);
+
+  // Bypass SW completely for API calls, Vite dev server modules, hot-updates, and Cloud Run preview
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.includes('hot-update') ||
+    url.hostname.includes('run.app') ||
+    url.hostname === 'localhost' ||
+    event.request.method !== 'GET'
+  ) {
+    return; // Pass through to server directly
   }
 
-  // Network-first strategy for HTML pages so updates are received immediately
+  // Network-first strategy for navigation and HTML requests
   if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(event.request)
@@ -56,30 +67,21 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/index.html')))
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/')))
     );
     return;
   }
 
-  // Cache-first with network update for static assets
+  // Network-first with cache fallback for other assets
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Fetch in background to update cache
-        fetch(event.request).then((netRes) => {
-          if (netRes && netRes.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, netRes));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
+    fetch(event.request)
+      .then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         }
         return networkResponse;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });

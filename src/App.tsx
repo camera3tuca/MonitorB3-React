@@ -3,6 +3,10 @@ import { Header } from './components/Header';
 import { ScannerFilters } from './components/ScannerFilters';
 import { OpportunitiesTable } from './components/OpportunitiesTable';
 import { AssetDetailPanel, TabType } from './components/AssetDetailPanel';
+import { EducationalModal } from './components/EducationalModal';
+import { EducationalBanner } from './components/EducationalBanner';
+import { InstallAppModal } from './components/InstallAppModal';
+import { usePWAInstall } from './hooks/usePWAInstall';
 
 import {
   AssetClass,
@@ -83,6 +87,30 @@ export const App: React.FC = () => {
   const [isLoadingHistory, setIsLoadingHistory] = useState<boolean>(false);
   const [fundamentals, setFundamentals] = useState<FundamentalsData | null>(null);
   const [news, setNews] = useState<NewsArticle[]>([]);
+
+  // PWA Installation Hook
+  const {
+    isInstallable,
+    isInstalled,
+    isIOS,
+    isInAppBrowser,
+    isInstallModalOpen,
+    setIsInstallModalOpen,
+    promptInstall,
+  } = usePWAInstall();
+
+  // Educational Guide State
+  const [isEducationalModalOpen, setIsEducationalModalOpen] = useState<boolean>(false);
+  const [educationalInitialTab, setEducationalInitialTab] = useState<
+    'visao-geral' | 'passo-a-passo' | 'indicadores' | 'gestao-risco' | 'faq'
+  >('visao-geral');
+
+  const handleOpenEducationalGuide = (
+    tab?: 'visao-geral' | 'passo-a-passo' | 'indicadores' | 'gestao-risco' | 'faq'
+  ) => {
+    setEducationalInitialTab(tab || 'visao-geral');
+    setIsEducationalModalOpen(true);
+  };
 
   // Toggle or isolate Asset Class filter
   const handleToggleClass = (c: AssetClass) => {
@@ -260,9 +288,39 @@ export const App: React.FC = () => {
         isRefreshing={isScanning}
         lastUpdated={lastUpdated}
         dataSource={dataSource}
+        onOpenEducationalGuide={handleOpenEducationalGuide}
+        onOpenInstallModal={() => setIsInstallModalOpen(true)}
+        onRatePlayStore={() => setIsInstallModalOpen(true)}
+        isInstallable={isInstallable}
       />
 
+      {/* Mobile Play Store Quick Notification Banner */}
+      {!isInstalled && (
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-b border-emerald-500/30 px-4 py-2 sm:hidden flex items-center justify-between text-xs shadow-md">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+              <path d="M3.6 1.48L13.9 12 3.6 22.52c-.37-.36-.6-.88-.6-1.52V3c0-.64.23-1.16.6-1.52z" fill="#00C1A6"/>
+              <path d="M17.43 8.47L4.62 1.15C4.24.94 3.88.94 3.6 1.48l10.3 10.52 3.53-3.53z" fill="#0086F0"/>
+              <path d="M17.43 15.53l-3.53-3.53L3.6 22.52c.28.54.64.54 1.02.33l12.81-7.32z" fill="#FF3333"/>
+              <path d="M21.57 10.12l-4.14-2.37-3.53 3.53 3.53 3.53 4.14-2.37c1.17-.67 1.17-1.78 0-2.45z" fill="#FFBA00"/>
+            </svg>
+            <span className="text-slate-200 truncate font-medium">
+              Disponível no Google Play Store
+            </span>
+          </div>
+          <button
+            onClick={() => setIsInstallModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold px-3 py-1 rounded-lg text-xs shadow transition whitespace-nowrap ml-2 flex-shrink-0"
+          >
+            Instalar
+          </button>
+        </div>
+      )}
+
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+        {/* Educational Didactic Banner */}
+        <EducationalBanner onOpenModal={handleOpenEducationalGuide} />
+
         {/* Scanner Filters */}
         <ScannerFilters
           selectedClasses={selectedClasses}
@@ -295,6 +353,7 @@ export const App: React.FC = () => {
           selectedSector={selectedSector}
           onSelectSector={setSelectedSector}
           availableSectors={availableSectors}
+          onOpenEducationalGuide={handleOpenEducationalGuide}
           detailContent={
             selectedOpp ? (
               <AssetDetailPanel
@@ -320,6 +379,20 @@ export const App: React.FC = () => {
         />
       </main>
 
+      {/* Educational Guide Modal */}
+      <EducationalModal
+        isOpen={isEducationalModalOpen}
+        onClose={() => setIsEducationalModalOpen(false)}
+        initialTab={educationalInitialTab}
+      />
+
+      {/* Install App Modal */}
+      <InstallAppModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        defaultPackageId="com.sciencebit.monitorb3"
+      />
+
       {/* Footer & Regulatory / Educational Disclaimer */}
       <footer className="mt-12 border-t border-slate-800 bg-slate-900/80 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-4">
@@ -338,8 +411,42 @@ export const App: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsInstallModalOpen(true)}
+                title="Instalar aplicativo oficial no Google Play Store"
+                className="text-emerald-400 hover:text-emerald-300 underline text-[11px] font-semibold cursor-pointer transition flex items-center gap-1"
+              >
+                <span>Google Play Store</span>
+              </button>
+              <span className="text-slate-600">•</span>
+              <button
+                onClick={() => setIsInstallModalOpen(true)}
+                title="Avaliar o aplicativo com 5 estrelas no Google Play"
+                className="text-amber-400 hover:text-amber-300 underline text-[11px] font-semibold cursor-pointer transition flex items-center gap-1"
+              >
+                <span>⭐ Avaliar App</span>
+              </button>
+              <span className="text-slate-600">•</span>
+              <a
+                href="https://wa.me/5562999755774?text=Ol%C3%A1!%20Vim%20pelo%20aplicativo%20Monitor%20Bolsa%20de%20Valores."
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Falar no WhatsApp: +55 (62) 99975-5774"
+                className="text-emerald-400 hover:text-emerald-300 underline text-[11px] font-semibold cursor-pointer transition flex items-center gap-1"
+              >
+                <span>💬 WhatsApp: (62) 99975-5774</span>
+              </a>
+              <span className="text-slate-600">•</span>
+              <button
+                onClick={() => handleOpenEducationalGuide('visao-geral')}
+                title="Abrir o manual didático completo para aprender a operar Swing Trade"
+                className="text-blue-400 hover:text-blue-300 underline text-[11px] font-semibold cursor-pointer transition"
+              >
+                Guia Didático
+              </button>
+              <span className="text-slate-600">•</span>
               <span className="bg-slate-800/80 border border-slate-750 text-slate-300 px-2.5 py-1 rounded-lg font-medium text-[11px]">
-                Versão 1.0.4
+                Versão 1.0.5
               </span>
               <button
                 onClick={clearAppCacheAndReload}
@@ -403,6 +510,22 @@ export const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Support Button */}
+      <a
+        id="floating-whatsapp-btn"
+        href="https://wa.me/5562999755774?text=Ol%C3%A1!%20Vim%20pelo%20aplicativo%20Monitor%20Bolsa%20de%20Valores%20e%20gostaria%20de%20tirar%20uma%20d%C3%BAvida."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Falar no WhatsApp"
+        title="Falar no WhatsApp: +55 (62) 99975-5774"
+        className="fixed bottom-5 right-5 z-40 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-white p-3 sm:px-4 sm:py-2.5 rounded-full shadow-xl shadow-emerald-950/80 flex items-center gap-2 border border-emerald-300/40 transition-all hover:shadow-emerald-500/40 cursor-pointer group"
+      >
+        <svg className="w-6 h-6 fill-current flex-shrink-0" viewBox="0 0 24 24">
+          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.8 13.47 3.8 11.91C3.81 7.37 7.5 3.67 12.05 3.67M9.11 7.44C8.95 7.44 8.68 7.5 8.46 7.74C8.23 7.99 7.6 8.58 7.6 9.78C7.6 10.98 8.48 12.14 8.6 12.3C8.72 12.46 10.33 14.94 12.8 16C13.39 16.26 13.84 16.41 14.2 16.52C14.79 16.71 15.33 16.68 15.75 16.62C16.22 16.55 17.2 16.03 17.41 15.45C17.61 14.86 17.61 14.36 17.55 14.25C17.49 14.15 17.34 14.09 17.11 13.98C16.89 13.86 15.79 13.32 15.59 13.25C15.38 13.17 15.23 13.14 15.08 13.36C14.93 13.59 14.5 14.09 14.37 14.24C14.24 14.39 14.11 14.41 13.89 14.3C13.66 14.18 12.93 13.94 12.07 13.17C11.4 12.57 10.95 11.83 10.82 11.61C10.69 11.39 10.81 11.27 10.92 11.16C11.02 11.06 11.15 10.89 11.26 10.76C11.37 10.64 11.41 10.55 11.48 10.4C11.56 10.26 11.52 10.13 11.46 10.02C11.41 9.9 10.95 8.78 10.76 8.32C10.58 7.87 10.39 7.93 10.25 7.92H9.81C9.66 7.92 9.43 7.98 9.24 8.18"/>
+        </svg>
+        <span className="hidden sm:inline font-bold text-xs text-white">WhatsApp</span>
+      </a>
     </div>
   );
 };

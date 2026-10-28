@@ -23,6 +23,21 @@ export function getApiUrl(endpoint: string): string {
   return cleanEndpoint;
 }
 
+// ── Resilient Fetch Helper with Timeout (Prevents App Freezes) ──
+export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 7000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // ── Direct Client-Side Fallback for TradingView Scanner ──
 function classificarAtivoDirect(ticker: string, tvType?: string, typespecs?: string[]): AssetClass {
   const t = ticker.toUpperCase();
@@ -119,32 +134,36 @@ async function fetchTradingViewDirect(classes: AssetClass[]): Promise<AssetOppor
     "RSI", "Stoch.K", "Stoch.D", "MACD.macd", "MACD.signal",
     "BB.lower", "BB.upper", "average_volume_10d_calc", "gap",
     "EMA20", "EMA50", "EMA200", "description", "type", "typespecs", "sector", "SMA200",
-    "Value.Traded", "average_volume_30d_calc"
+    "Value.Traded", "average_volume_30d_calc", "industry"
   ];
 
-  const doScan = async (filter: any[]) => {
-    const resp = await fetch('https://scanner.tradingview.com/brazil/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filter,
-        options: { lang: 'pt' },
-        symbols: { query: { types: [] }, tickers: [] },
-        columns: tvColumns,
-        sort: { sortBy: 'change', sortOrder: 'asc' },
-        range: [0, 80]
-      })
-    });
-    if (!resp.ok) return [];
-    const json = await resp.json();
-    return json.data || [];
+  const doScan = async (filter: any[], range: [number, number] = [0, 1000]) => {
+    try {
+      const resp = await fetchWithTimeout('https://scanner.tradingview.com/brazil/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filter,
+          options: { lang: 'pt' },
+          symbols: { query: { types: [] }, tickers: [] },
+          columns: tvColumns,
+          sort: { sortBy: 'change', sortOrder: 'asc' },
+          range
+        })
+      }, 7000);
+      if (!resp.ok) return [];
+      const json = await resp.json();
+      return json.data || [];
+    } catch {
+      return [];
+    }
   };
 
   const [stocks, bdrs, etfs, fiis] = await Promise.all([
-    doScan([{ left: 'type', operation: 'equal', right: 'stock' }, { left: 'change', operation: 'less', right: 0 }]),
-    doScan([{ left: 'type', operation: 'equal', right: 'dr' }, { left: 'change', operation: 'less', right: 0 }]),
-    doScan([{ left: 'typespecs', operation: 'has', right: ['etf'] }, { left: 'change', operation: 'less', right: 0 }]),
-    doScan([{ left: 'type', operation: 'equal', right: 'fund' }, { left: 'typespecs', operation: 'has_none_of', right: ['etf'] }, { left: 'change', operation: 'less', right: 0 }])
+    doScan([{ left: 'type', operation: 'equal', right: 'stock' }, { left: 'change', operation: 'less', right: 0 }], [0, 1000]),
+    doScan([{ left: 'type', operation: 'equal', right: 'dr' }, { left: 'change', operation: 'less', right: 0 }], [0, 1000]),
+    doScan([{ left: 'typespecs', operation: 'has', right: ['etf'] }, { left: 'change', operation: 'less', right: 0 }], [0, 500]),
+    doScan([{ left: 'type', operation: 'equal', right: 'fund' }, { left: 'typespecs', operation: 'has_none_of', right: ['etf'] }, { left: 'change', operation: 'less', right: 0 }], [0, 600])
   ]);
 
   const combined = [...stocks, ...bdrs, ...etfs, ...fiis];
@@ -162,7 +181,7 @@ async function fetchTradingViewDirect(classes: AssetClass[]): Promise<AssetOppor
     if (close <= 0) continue;
 
     const classe = classificarAtivoDirect(rawTicker, row[20], row[21]);
-    const setor = resolveSector(rawTicker, row[22], classe);
+    const setor = resolveSector(rawTicker, row[22], classe, row[26], row[19]);
     const rsi = Number(row[7]) || 50;
     const stoch = Number(row[8]) || 50;
     const is = Math.round(((100 - rsi) * 0.6) + ((100 - stoch) * 0.4));
@@ -218,11 +237,11 @@ export async function fetchScannerData(classes: AssetClass[] = ['Ação', 'BDR',
 
   // 1. Try local server endpoint first
   try {
-    const res = await fetch(getApiUrl('/api/scan'), {
+    const res = await fetchWithTimeout(getApiUrl('/api/scan'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
       body: JSON.stringify({ classes })
-    });
+    }, 7000);
 
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) {

@@ -23,6 +23,9 @@ export const KNOWN_TICKER_SECTORS: Record<string, string> = {
 
   // Mineração, Siderurgia e Papel/Celulose
   VALE3: 'Mineração & Materiais',
+  AURA33: 'Mineração & Materiais',
+  BHPG34: 'Mineração & Materiais',
+  RIOT34: 'Mineração & Materiais',
   GGBR4: 'Mineração & Materiais',
   GGBR3: 'Mineração & Materiais',
   CSNA3: 'Mineração & Materiais',
@@ -175,6 +178,11 @@ export const KNOWN_TICKER_SECTORS: Record<string, string> = {
   STBP3: 'Transporte & Indústria',
   HBSA3: 'Transporte & Indústria',
   WEGE3: 'Transporte & Indústria',
+  G2EV34: 'Transporte & Indústria',
+  GEOO34: 'Transporte & Indústria',
+  BOEI34: 'Transporte & Indústria',
+  CATP34: 'Transporte & Indústria',
+  DEEC34: 'Transporte & Indústria',
   TUPY3: 'Transporte & Indústria',
   SHUL4: 'Transporte & Indústria',
   POMO4: 'Transporte & Indústria',
@@ -325,27 +333,188 @@ export const SECTOR_STYLES: Record<string, SectorStyle> = {
   },
 };
 
-export function resolveSector(ticker: string, rawSector?: string, classe?: string): string {
+export function resolveSector(
+  ticker: string,
+  rawSector?: string,
+  classe?: string,
+  rawIndustry?: string,
+  description?: string
+): string {
   const cleanTicker = (ticker || '').toUpperCase().trim();
   if (KNOWN_TICKER_SECTORS[cleanTicker]) {
     return KNOWN_TICKER_SECTORS[cleanTicker];
   }
 
-  if (classe === 'ETF') return 'ETFs & Índices';
-  if (classe === 'FII') return 'Fundos Imobiliários';
+  const s = String(rawSector || '').toLowerCase();
+  const ind = String(rawIndustry || '').toLowerCase();
+  const desc = String(description || '').toLowerCase();
 
-  const s = (rawSector || '').toLowerCase();
-  if (s.includes('finance') || s.includes('bank') || s.includes('insurance')) return 'Financeiro & Bancos';
-  if (s.includes('energy') || s.includes('oil') || s.includes('petro') || s.includes('gas')) return 'Petróleo & Gás';
-  if (s.includes('mineral') || s.includes('basic material') || s.includes('steel') || s.includes('metal')) return 'Mineração & Materiais';
-  if (s.includes('tech') || s.includes('software') || s.includes('electronic') || s.includes('semiconductor')) return 'Tecnologia';
-  if (s.includes('retail') || s.includes('consumer') || s.includes('food') || s.includes('beverage') || s.includes('apparel')) return 'Consumo & Varejo';
-  if (s.includes('utilit') || s.includes('electric') || s.includes('water') || s.includes('sanitation')) return 'Energia & Saneamento';
-  if (s.includes('health') || s.includes('pharma') || s.includes('biotech') || s.includes('medical')) return 'Saúde';
-  if (s.includes('real estate') || s.includes('construction') || s.includes('building') || s.includes('property')) return 'Construção & Imobiliário';
-  if (s.includes('transport') || s.includes('logistics') || s.includes('airline') || s.includes('industrial') || s.includes('manufacturing')) return 'Transporte & Indústria';
-  if (s.includes('telecom') || s.includes('communication') || s.includes('media')) return 'Telecom & Mídia';
-  if (s.includes('education') || s.includes('school')) return 'Educação';
+  // 1. Tickers ending in 39 or description/industry with ETF/Trusts
+  if (
+    classe === 'ETF' ||
+    cleanTicker.endsWith('39') ||
+    desc.includes('etf') ||
+    desc.includes('trust') ||
+    ind.includes('investment trusts') ||
+    ind.includes('mutual funds')
+  ) {
+    return 'ETFs & Índices';
+  }
+
+  if (
+    classe === 'FII' ||
+    (cleanTicker.endsWith('11') && (desc.includes('fii') || desc.includes('fundo imob') || ind.includes('real estate investment trust')))
+  ) {
+    return 'Fundos Imobiliários';
+  }
+
+  // 2. Health & Pharmaceuticals (MUST BE BEFORE TECH to prevent Health Technology being hijacked)
+  if (
+    s.includes('health') ||
+    ind.includes('pharma') ||
+    ind.includes('biotech') ||
+    ind.includes('medical') ||
+    ind.includes('hospital') ||
+    ind.includes('drug')
+  ) {
+    return 'Saúde';
+  }
+
+  // 3. Oil, Gas & Energy Minerals (Check Energy Minerals BEFORE general minerals, ignore non-energy)
+  if (
+    s === 'energy minerals' ||
+    (s.includes('energy') && !s.includes('non-energy')) ||
+    s.includes('oil') ||
+    s.includes('petro') ||
+    s.includes('gas') ||
+    ind.includes('integrated oil') ||
+    ind.includes('oil & gas') ||
+    ind.includes('oilfield') ||
+    ind.includes('refining')
+  ) {
+    return 'Petróleo & Gás';
+  }
+
+  // 4. Mining, Metals & Materials (Non-energy minerals, metals, steel, chemicals, paper & pulp)
+  if (
+    s.includes('non-energy') ||
+    s.includes('basic material') ||
+    (s.includes('mineral') && !s.includes('energy minerals')) ||
+    ind.includes('steel') ||
+    ind.includes('metal') ||
+    ind.includes('mining') ||
+    ind.includes('gold') ||
+    ind.includes('copper') ||
+    ind.includes('iron') ||
+    ind.includes('chemical') ||
+    ind.includes('forest product') ||
+    ind.includes('aluminum') ||
+    ind.includes('pulp')
+  ) {
+    return 'Mineração & Materiais';
+  }
+
+  // 5. Utilities (Electric, Water, Sanitation, Gas utilities)
+  if (
+    s.includes('utilit') ||
+    ind.includes('electric utilities') ||
+    ind.includes('water utilities') ||
+    ind.includes('gas distributors') ||
+    ind.includes('alternative power')
+  ) {
+    return 'Energia & Saneamento';
+  }
+
+  // 6. Real Estate & Construction
+  if (
+    s.includes('real estate') ||
+    ind.includes('real estate') ||
+    ind.includes('homebuilding') ||
+    ind.includes('building products') ||
+    ind.includes('reit') ||
+    ind.includes('construction materials')
+  ) {
+    return 'Construção & Imobiliário';
+  }
+
+  // 7. Finance & Banks
+  if (
+    s.includes('finance') ||
+    ind.includes('bank') ||
+    ind.includes('insurance') ||
+    ind.includes('financial') ||
+    ind.includes('securities') ||
+    ind.includes('broker')
+  ) {
+    return 'Financeiro & Bancos';
+  }
+
+  // 8. Consumer & Retail
+  if (
+    s.includes('retail') ||
+    s.includes('consumer') ||
+    ind.includes('food') ||
+    ind.includes('beverage') ||
+    ind.includes('apparel') ||
+    ind.includes('footwear') ||
+    ind.includes('hotel') ||
+    ind.includes('restaurant') ||
+    ind.includes('personal care') ||
+    ind.includes('supermarket') ||
+    ind.includes('household') ||
+    ind.includes('e-commerce')
+  ) {
+    return 'Consumo & Varejo';
+  }
+
+  // 9. Transportation, Industrial & Capital Goods
+  if (
+    s.includes('transport') ||
+    s.includes('producer manufacturing') ||
+    s.includes('industrial') ||
+    ind.includes('aerospace') ||
+    ind.includes('defense') ||
+    ind.includes('airline') ||
+    ind.includes('air freight') ||
+    ind.includes('trucking') ||
+    ind.includes('marine shipping') ||
+    ind.includes('electrical products') ||
+    ind.includes('auto parts') ||
+    ind.includes('industrial machinery') ||
+    ind.includes('railroad')
+  ) {
+    return 'Transporte & Indústria';
+  }
+
+  // 10. Technology
+  if (
+    s.includes('tech') ||
+    ind.includes('software') ||
+    ind.includes('semiconductor') ||
+    ind.includes('data processing') ||
+    ind.includes('internet software') ||
+    ind.includes('cloud')
+  ) {
+    return 'Tecnologia';
+  }
+
+  // 11. Telecom & Media
+  if (
+    s.includes('communication') ||
+    s.includes('telecom') ||
+    ind.includes('telecommunications') ||
+    ind.includes('wireless') ||
+    ind.includes('cable') ||
+    ind.includes('broadcasting') ||
+    ind.includes('media')
+  ) {
+    return 'Telecom & Mídia';
+  }
+
+  // 12. Education
+  if (s.includes('education') || ind.includes('educational') || ind.includes('school')) {
+    return 'Educação';
+  }
 
   return 'Outros';
 }

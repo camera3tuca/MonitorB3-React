@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 
 const app = express();
@@ -29,6 +30,12 @@ app.use((req, res, next) => {
 // Public static assets
 const publicPath = path.join(process.cwd(), 'public');
 app.use(express.static(publicPath));
+
+// Static fallback for built assets if client requests them
+const distAssetsPath = path.join(process.cwd(), 'dist', 'assets');
+if (fs.existsSync(distAssetsPath)) {
+  app.use('/assets', express.static(distAssetsPath));
+}
 
 // Dedicated PWA routes with explicit mime types
 app.get('/manifest.json', (req, res) => {
@@ -74,39 +81,214 @@ app.get('/download-zip', (req, res) => {
 
 // Helper for identifying stock sectors
 const KNOWN_SECTORS: Record<string, string> = {
-  PETR4: 'Petróleo & Gás', PETR3: 'Petróleo & Gás', PRIO3: 'Petróleo & Gás', RECV3: 'Petróleo & Gás', RRRP3: 'Petróleo & Gás', BRAV3: 'Petróleo & Gás', ENAT3: 'Petróleo & Gás', UGPA3: 'Petróleo & Gás', CSAN3: 'Petróleo & Gás', VBBR3: 'Petróleo & Gás',
-  VALE3: 'Mineração & Materiais', GGBR4: 'Mineração & Materiais', GGBR3: 'Mineração & Materiais', CSNA3: 'Mineração & Materiais', USIM5: 'Mineração & Materiais', GOAU4: 'Mineração & Materiais', CBAV3: 'Mineração & Materiais', SUZB3: 'Mineração & Materiais', KLBN11: 'Mineração & Materiais', FESA4: 'Mineração & Materiais',
-  ITUB4: 'Financeiro & Bancos', ITUB3: 'Financeiro & Bancos', BBDC4: 'Financeiro & Bancos', BBDC3: 'Financeiro & Bancos', BBAS3: 'Financeiro & Bancos', SANB11: 'Financeiro & Bancos', BPAC11: 'Financeiro & Bancos', B3SA3: 'Financeiro & Bancos', BBSE3: 'Financeiro & Bancos', CXSE3: 'Financeiro & Bancos', PSSA3: 'Financeiro & Bancos', CIEL3: 'Financeiro & Bancos', ITSA4: 'Financeiro & Bancos',
-  TOTS3: 'Tecnologia', LWSA3: 'Tecnologia', POSI3: 'Tecnologia', INTB3: 'Tecnologia', AAPL34: 'Tecnologia', NVDC34: 'Tecnologia', MSFT34: 'Tecnologia', GOGL34: 'Tecnologia', AMZO34: 'Tecnologia', M1TA34: 'Tecnologia', TSLA34: 'Tecnologia', NFLX34: 'Tecnologia', AVGO34: 'Tecnologia', AMD34: 'Tecnologia',
-  MGLU3: 'Consumo & Varejo', BHIA3: 'Consumo & Varejo', LREN3: 'Consumo & Varejo', ARZZ3: 'Consumo & Varejo', SOMA3: 'Consumo & Varejo', ALPA4: 'Consumo & Varejo', CRFB3: 'Consumo & Varejo', ASAI3: 'Consumo & Varejo', ABEV3: 'Consumo & Varejo', JBSS3: 'Consumo & Varejo', BRFS3: 'Consumo & Varejo', MRFG3: 'Consumo & Varejo', BEEF3: 'Consumo & Varejo', MDIA3: 'Consumo & Varejo', SLCE3: 'Consumo & Varejo',
+  // Petróleo & Gás
+  PETR4: 'Petróleo & Gás', PETR3: 'Petróleo & Gás', PRIO3: 'Petróleo & Gás', RECV3: 'Petróleo & Gás', RRRP3: 'Petróleo & Gás', BRAV3: 'Petróleo & Gás', ENAT3: 'Petróleo & Gás', UGPA3: 'Petróleo & Gás', CSAN3: 'Petróleo & Gás', VBBR3: 'Petróleo & Gás', EXXO34: 'Petróleo & Gás', CHVX34: 'Petróleo & Gás',
+  // Mineração & Materiais
+  VALE3: 'Mineração & Materiais', AURA33: 'Mineração & Materiais', BHPG34: 'Mineração & Materiais', RIOT34: 'Mineração & Materiais', GGBR4: 'Mineração & Materiais', GGBR3: 'Mineração & Materiais', CSNA3: 'Mineração & Materiais', USIM5: 'Mineração & Materiais', GOAU4: 'Mineração & Materiais', CBAV3: 'Mineração & Materiais', SUZB3: 'Mineração & Materiais', KLBN11: 'Mineração & Materiais', FESA4: 'Mineração & Materiais',
+  // Financeiro & Bancos
+  ITUB4: 'Financeiro & Bancos', ITUB3: 'Financeiro & Bancos', BBDC4: 'Financeiro & Bancos', BBDC3: 'Financeiro & Bancos', BBAS3: 'Financeiro & Bancos', SANB11: 'Financeiro & Bancos', BPAC11: 'Financeiro & Bancos', B3SA3: 'Financeiro & Bancos', BBSE3: 'Financeiro & Bancos', CXSE3: 'Financeiro & Bancos', PSSA3: 'Financeiro & Bancos', CIEL3: 'Financeiro & Bancos', ITSA4: 'Financeiro & Bancos', JPMC34: 'Financeiro & Bancos', BOAC34: 'Financeiro & Bancos',
+  // Tecnologia
+  TOTS3: 'Tecnologia', LWSA3: 'Tecnologia', POSI3: 'Tecnologia', INTB3: 'Tecnologia', AAPL34: 'Tecnologia', NVDC34: 'Tecnologia', MSFT34: 'Tecnologia', GOGL34: 'Tecnologia', AMZO34: 'Tecnologia', M1TA34: 'Tecnologia', TSLA34: 'Tecnologia', NFLX34: 'Tecnologia', AVGO34: 'Tecnologia', AMD34: 'Tecnologia', P2LT34: 'Tecnologia', P2AN34: 'Tecnologia', '01KT34': 'Tecnologia', F1TN34: 'Tecnologia', V2TX34: 'Tecnologia', D1DG34: 'Tecnologia', N1TA34: 'Tecnologia', C1HK34: 'Tecnologia', QCOM34: 'Tecnologia', Z2SC34: 'Tecnologia', CSCO34: 'Tecnologia', TEXA34: 'Tecnologia',
+  // Consumo & Varejo
+  MGLU3: 'Consumo & Varejo', BHIA3: 'Consumo & Varejo', LREN3: 'Consumo & Varejo', ARZZ3: 'Consumo & Varejo', SOMA3: 'Consumo & Varejo', ALPA4: 'Consumo & Varejo', CRFB3: 'Consumo & Varejo', ASAI3: 'Consumo & Varejo', ABEV3: 'Consumo & Varejo', JBSS3: 'Consumo & Varejo', BRFS3: 'Consumo & Varejo', MRFG3: 'Consumo & Varejo', BEEF3: 'Consumo & Varejo', MDIA3: 'Consumo & Varejo', SLCE3: 'Consumo & Varejo', AIRB34: 'Consumo & Varejo', COCA34: 'Consumo & Varejo', PEPB34: 'Consumo & Varejo', PGCO34: 'Consumo & Varejo', WMTB34: 'Consumo & Varejo',
+  // Energia & Saneamento
   ELET3: 'Energia & Saneamento', ELET6: 'Energia & Saneamento', CPFE3: 'Energia & Saneamento', EGIE3: 'Energia & Saneamento', CMIG4: 'Energia & Saneamento', EQTL3: 'Energia & Saneamento', TAEE11: 'Energia & Saneamento', TRPL4: 'Energia & Saneamento', SBSP3: 'Energia & Saneamento', SAPR11: 'Energia & Saneamento', CSMG3: 'Energia & Saneamento', ALUP11: 'Energia & Saneamento', CPLE6: 'Energia & Saneamento',
-  RDOR3: 'Saúde', HAPV3: 'Saúde', FLRY3: 'Saúde', RADL3: 'Saúde', ONCO3: 'Saúde', QUAL3: 'Saúde',
+  // Saúde
+  RDOR3: 'Saúde', HAPV3: 'Saúde', FLRY3: 'Saúde', RADL3: 'Saúde', ONCO3: 'Saúde', QUAL3: 'Saúde', PFIZ34: 'Saúde', JNJB34: 'Saúde', LLYB34: 'Saúde', ABTT34: 'Saúde', B1NT34: 'Saúde', I1SR34: 'Saúde',
+  // Construção & Imobiliário
   CYRE3: 'Construção & Imobiliário', EZTC3: 'Construção & Imobiliário', MRVE3: 'Construção & Imobiliário', DIRR3: 'Construção & Imobiliário', CURY3: 'Construção & Imobiliário', MULT3: 'Construção & Imobiliário', IGTI11: 'Construção & Imobiliário', ALOS3: 'Construção & Imobiliário',
-  RENT3: 'Transporte & Indústria', MOVI3: 'Transporte & Indústria', CCRO3: 'Transporte & Indústria', ECOR3: 'Transporte & Indústria', RAIL3: 'Transporte & Indústria', AZUL4: 'Transporte & Indústria', GOLL4: 'Transporte & Indústria', EMBR3: 'Transporte & Indústria', WEGE3: 'Transporte & Indústria',
-  VIVT3: 'Telecom & Mídia', TIMS3: 'Telecom & Mídia',
+  // Transporte & Indústria
+  RENT3: 'Transporte & Indústria', MOVI3: 'Transporte & Indústria', CCRO3: 'Transporte & Indústria', ECOR3: 'Transporte & Indústria', RAIL3: 'Transporte & Indústria', AZUL4: 'Transporte & Indústria', GOLL4: 'Transporte & Indústria', EMBR3: 'Transporte & Indústria', WEGE3: 'Transporte & Indústria', G2EV34: 'Transporte & Indústria', GEOO34: 'Transporte & Indústria', BOEI34: 'Transporte & Indústria', CATP34: 'Transporte & Indústria', DEEC34: 'Transporte & Indústria',
+  // Telecom & Mídia
+  VIVT3: 'Telecom & Mídia', TIMS3: 'Telecom & Mídia', DISN34: 'Telecom & Mídia',
+  // Educação
   COGN3: 'Educação', YDUQ3: 'Educação',
-  BOVA11: 'ETFs & Índices', BOVV11: 'ETFs & Índices', SMAL11: 'ETFs & Índices', IVVB11: 'ETFs & Índices', SPXI11: 'ETFs & Índices', HASH11: 'ETFs & Índices', GOLD11: 'ETFs & Índices', BRAX11: 'ETFs & Índices', NASD11: 'ETFs & Índices',
+  // ETFs & Índices
+  BOVA11: 'ETFs & Índices', BOVV11: 'ETFs & Índices', SMAL11: 'ETFs & Índices', IVVB11: 'ETFs & Índices', SPXI11: 'ETFs & Índices', HASH11: 'ETFs & Índices', GOLD11: 'ETFs & Índices', BRAX11: 'ETFs & Índices', NASD11: 'ETFs & Índices', BTIP39: 'ETFs & Índices', BSTI39: 'ETFs & Índices', BHER39: 'ETFs & Índices', ABGD39: 'ETFs & Índices',
+  // FIIs
   HGLG11: 'Fundos Imobiliários', KNRI11: 'Fundos Imobiliários', XPLG11: 'Fundos Imobiliários', MXRF11: 'Fundos Imobiliários', XPML11: 'Fundos Imobiliários'
 };
 
-function resolverSetor(ticker: string, rawSector?: string, classe?: string): string {
+function resolverSetor(
+  ticker: string,
+  rawSector?: string,
+  classe?: string,
+  rawIndustry?: string,
+  description?: string
+): string {
   const t = (ticker || '').toUpperCase().trim();
   if (KNOWN_SECTORS[t]) return KNOWN_SECTORS[t];
-  if (classe === 'ETF') return 'ETFs & Índices';
-  if (classe === 'FII') return 'Fundos Imobiliários';
 
   const s = String(rawSector || '').toLowerCase();
-  if (s.includes('finance') || s.includes('bank') || s.includes('insurance')) return 'Financeiro & Bancos';
-  if (s.includes('energy') || s.includes('oil') || s.includes('petro') || s.includes('gas')) return 'Petróleo & Gás';
-  if (s.includes('mineral') || s.includes('basic material') || s.includes('steel') || s.includes('metal')) return 'Mineração & Materiais';
-  if (s.includes('tech') || s.includes('software') || s.includes('electronic') || s.includes('semiconductor')) return 'Tecnologia';
-  if (s.includes('retail') || s.includes('consumer') || s.includes('food') || s.includes('beverage')) return 'Consumo & Varejo';
-  if (s.includes('utilit') || s.includes('electric') || s.includes('water') || s.includes('sanitation')) return 'Energia & Saneamento';
-  if (s.includes('health') || s.includes('pharma') || s.includes('biotech') || s.includes('medical')) return 'Saúde';
-  if (s.includes('real estate') || s.includes('construction') || s.includes('building')) return 'Construção & Imobiliário';
-  if (s.includes('transport') || s.includes('logistics') || s.includes('airline') || s.includes('industrial')) return 'Transporte & Indústria';
-  if (s.includes('telecom') || s.includes('communication')) return 'Telecom & Mídia';
-  if (s.includes('education')) return 'Educação';
+  const ind = String(rawIndustry || '').toLowerCase();
+  const desc = String(description || '').toLowerCase();
+
+  // 1. Tickers ending in 39 or description/industry with ETF/Trusts
+  if (
+    classe === 'ETF' ||
+    t.endsWith('39') ||
+    desc.includes('etf') ||
+    desc.includes('trust') ||
+    ind.includes('investment trusts') ||
+    ind.includes('mutual funds')
+  ) {
+    return 'ETFs & Índices';
+  }
+
+  if (
+    classe === 'FII' ||
+    (t.endsWith('11') && (desc.includes('fii') || desc.includes('fundo imob') || ind.includes('real estate investment trust')))
+  ) {
+    return 'Fundos Imobiliários';
+  }
+
+  // 2. Health & Pharmaceuticals (MUST BE BEFORE TECH to prevent Health Technology being hijacked)
+  if (
+    s.includes('health') ||
+    ind.includes('pharma') ||
+    ind.includes('biotech') ||
+    ind.includes('medical') ||
+    ind.includes('hospital') ||
+    ind.includes('drug')
+  ) {
+    return 'Saúde';
+  }
+
+  // 3. Oil, Gas & Energy Minerals (Check Energy Minerals BEFORE general minerals, ignore non-energy)
+  if (
+    s === 'energy minerals' ||
+    (s.includes('energy') && !s.includes('non-energy')) ||
+    s.includes('oil') ||
+    s.includes('petro') ||
+    s.includes('gas') ||
+    ind.includes('integrated oil') ||
+    ind.includes('oil & gas') ||
+    ind.includes('oilfield') ||
+    ind.includes('refining')
+  ) {
+    return 'Petróleo & Gás';
+  }
+
+  // 4. Mining, Metals & Materials (Non-energy minerals, metals, steel, chemicals, paper & pulp)
+  if (
+    s.includes('non-energy') ||
+    s.includes('basic material') ||
+    (s.includes('mineral') && !s.includes('energy minerals')) ||
+    ind.includes('steel') ||
+    ind.includes('metal') ||
+    ind.includes('mining') ||
+    ind.includes('gold') ||
+    ind.includes('copper') ||
+    ind.includes('iron') ||
+    ind.includes('chemical') ||
+    ind.includes('forest product') ||
+    ind.includes('aluminum') ||
+    ind.includes('pulp')
+  ) {
+    return 'Mineração & Materiais';
+  }
+
+  // 5. Utilities (Electric, Water, Sanitation, Gas utilities)
+  if (
+    s.includes('utilit') ||
+    ind.includes('electric utilities') ||
+    ind.includes('water utilities') ||
+    ind.includes('gas distributors') ||
+    ind.includes('alternative power')
+  ) {
+    return 'Energia & Saneamento';
+  }
+
+  // 6. Real Estate & Construction
+  if (
+    s.includes('real estate') ||
+    ind.includes('real estate') ||
+    ind.includes('homebuilding') ||
+    ind.includes('building products') ||
+    ind.includes('reit') ||
+    ind.includes('construction materials')
+  ) {
+    return 'Construção & Imobiliário';
+  }
+
+  // 7. Finance & Banks
+  if (
+    s.includes('finance') ||
+    ind.includes('bank') ||
+    ind.includes('insurance') ||
+    ind.includes('financial') ||
+    ind.includes('securities') ||
+    ind.includes('broker')
+  ) {
+    return 'Financeiro & Bancos';
+  }
+
+  // 8. Consumer & Retail
+  if (
+    s.includes('retail') ||
+    s.includes('consumer') ||
+    ind.includes('food') ||
+    ind.includes('beverage') ||
+    ind.includes('apparel') ||
+    ind.includes('footwear') ||
+    ind.includes('hotel') ||
+    ind.includes('restaurant') ||
+    ind.includes('personal care') ||
+    ind.includes('supermarket') ||
+    ind.includes('household') ||
+    ind.includes('e-commerce')
+  ) {
+    return 'Consumo & Varejo';
+  }
+
+  // 9. Transportation, Industrial & Capital Goods
+  if (
+    s.includes('transport') ||
+    s.includes('producer manufacturing') ||
+    s.includes('industrial') ||
+    ind.includes('aerospace') ||
+    ind.includes('defense') ||
+    ind.includes('airline') ||
+    ind.includes('air freight') ||
+    ind.includes('trucking') ||
+    ind.includes('marine shipping') ||
+    ind.includes('electrical products') ||
+    ind.includes('auto parts') ||
+    ind.includes('industrial machinery') ||
+    ind.includes('railroad')
+  ) {
+    return 'Transporte & Indústria';
+  }
+
+  // 10. Technology
+  if (
+    s.includes('tech') ||
+    ind.includes('software') ||
+    ind.includes('semiconductor') ||
+    ind.includes('data processing') ||
+    ind.includes('internet software') ||
+    ind.includes('cloud')
+  ) {
+    return 'Tecnologia';
+  }
+
+  // 11. Telecom & Media
+  if (
+    s.includes('communication') ||
+    s.includes('telecom') ||
+    ind.includes('telecommunications') ||
+    ind.includes('wireless') ||
+    ind.includes('cable') ||
+    ind.includes('broadcasting') ||
+    ind.includes('media')
+  ) {
+    return 'Telecom & Mídia';
+  }
+
+  // 12. Education
+  if (s.includes('education') || ind.includes('educational') || ind.includes('school')) {
+    return 'Educação';
+  }
 
   return 'Outros';
 }
@@ -245,20 +427,25 @@ app.get('/api/health', (req, res) => {
 // ── Global scan cache for fast indicators reconciliation ──
 const scanCacheByTicker = new Map<string, any>();
 
-// ── API: Scan B3 Opportunities ──
-app.post('/api/scan', async (req, res) => {
+// ── API: Scan B3 Opportunities (Supports POST and GET) ──
+app.all('/api/scan', async (req, res) => {
   try {
-    const { classes = ['Ação', 'BDR', 'ETF'] } = req.body || {};
+    let classes: string[] = ['Ação', 'BDR', 'ETF'];
+    if (req.body && req.body.classes && Array.isArray(req.body.classes)) {
+      classes = req.body.classes;
+    } else if (req.query && req.query.classes) {
+      classes = String(req.query.classes).split(',');
+    }
 
     const tvColumns = [
       "name", "close", "change", "open", "high", "low", "volume",
       "RSI", "Stoch.K", "Stoch.D", "MACD.macd", "MACD.signal",
       "BB.lower", "BB.upper", "average_volume_10d_calc", "gap",
       "EMA20", "EMA50", "EMA200", "description", "type", "typespecs", "sector", "SMA200",
-      "Value.Traded", "average_volume_30d_calc", "average_volume_90d_calc"
+      "Value.Traded", "average_volume_30d_calc", "average_volume_90d_calc", "industry"
     ];
 
-    const fetchTvScan = async (filter: any[], range: [number, number] = [0, 100]) => {
+    const fetchTvScan = async (filter: any[], range: [number, number] = [0, 1000]) => {
       try {
         const resp = await fetch('https://scanner.tradingview.com/brazil/scan', {
           method: 'POST',
@@ -271,7 +458,7 @@ app.post('/api/scan', async (req, res) => {
             sort: { sortBy: 'change', sortOrder: 'asc' },
             range
           }),
-          signal: AbortSignal.timeout(6000)
+          signal: AbortSignal.timeout(12000)
         });
         if (resp.ok) {
           const json = await resp.json();
@@ -285,25 +472,25 @@ app.post('/api/scan', async (req, res) => {
 
     let tvResults: any[] = [];
     try {
-      // Execute parallel scans across distinct asset categories to guarantee ETFs, Stocks, BDRs & FIIs are all included
+      // Execute parallel scans across distinct asset categories with expanded ranges to capture ALL drops
       const [stocksData, bdrsData, etfsData, fiisData] = await Promise.all([
         fetchTvScan([
           { left: 'type', operation: 'equal', right: 'stock' },
           { left: 'change', operation: 'less', right: 0 }
-        ], [0, 100]),
+        ], [0, 1000]),
         fetchTvScan([
           { left: 'type', operation: 'equal', right: 'dr' },
           { left: 'change', operation: 'less', right: 0 }
-        ], [0, 100]),
+        ], [0, 1000]),
         fetchTvScan([
           { left: 'typespecs', operation: 'has', right: ['etf'] },
           { left: 'change', operation: 'less', right: 0 }
-        ], [0, 80]),
+        ], [0, 500]),
         fetchTvScan([
           { left: 'type', operation: 'equal', right: 'fund' },
           { left: 'typespecs', operation: 'has_none_of', right: ['etf'] },
           { left: 'change', operation: 'less', right: 0 }
-        ], [0, 40])
+        ], [0, 600])
       ]);
 
       const combinedRaw = [...stocksData, ...bdrsData, ...etfsData, ...fiisData];
@@ -342,6 +529,7 @@ app.post('/api/scan', async (req, res) => {
             Value_Traded: row[24],
             average_volume_30d_calc: row[25],
             average_volume_90d_calc: row[26],
+            industry: row[27],
           });
         }
       }
@@ -387,7 +575,7 @@ app.post('/api/scan', async (req, res) => {
         if (close <= 0 || change >= 0) continue;
 
         const classe = classificarAtivo(rawTicker, row.type, row.typespecs);
-        const setor = resolverSetor(rawTicker, row.sector, classe);
+        const setor = resolverSetor(rawTicker, row.sector, classe, row.industry, row.description);
         const rsi = Number(row.RSI) || 50;
         const stoch = Number(row.Stoch_K) || 50;
         const macdHist = (Number(row.MACD_macd) || 0) - (Number(row.MACD_signal) || 0);

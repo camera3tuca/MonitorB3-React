@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AssetOpportunity } from '../types';
-import { ChevronUp, ChevronDown, CheckCircle2, ArrowDownRight, Eye, Layers, Filter, X, ChevronRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, CheckCircle2, ArrowDownRight, Eye, Layers, Filter, X, ChevronRight, HelpCircle, GraduationCap, Info } from 'lucide-react';
 import { getSectorStyle } from '../utils/sectorUtils';
 
 interface OpportunitiesTableProps {
@@ -11,6 +11,7 @@ interface OpportunitiesTableProps {
   onSelectSector?: (sector: string) => void;
   availableSectors?: [string, number][];
   detailContent?: React.ReactNode;
+  onOpenEducationalGuide?: (tab?: 'visao-geral' | 'passo-a-passo' | 'indicadores' | 'gestao-risco' | 'faq') => void;
 }
 
 type SortField = 'IS' | 'Queda_Dia' | 'Score' | 'Liquidez' | 'Preco' | 'Volume' | 'Ticker' | 'Setor';
@@ -23,9 +24,11 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
   onSelectSector,
   availableSectors = [],
   detailContent,
+  onOpenEducationalGuide,
 }) => {
   const [sortField, setSortField] = useState<SortField>('Queda_Dia');
   const [sortAsc, setSortAsc] = useState<boolean>(true);
+  const [visibleCount, setVisibleCount] = useState<number>(100);
   const detailRef = useRef<HTMLTableRowElement | null>(null);
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
@@ -44,15 +47,21 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  // Auto scroll smoothly to the expanded chart/analysis row
+  // Auto scroll smoothly to the expanded chart/analysis row and expand visibleCount if needed
   useEffect(() => {
-    if (selectedTicker && detailRef.current) {
-      const timer = setTimeout(() => {
-        detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 100);
-      return () => clearTimeout(timer);
+    if (selectedTicker) {
+      const idx = opportunities.findIndex(d => d.Ticker === selectedTicker);
+      if (idx >= visibleCount) {
+        setVisibleCount(Math.max(visibleCount, idx + 50));
+      }
+      if (detailRef.current) {
+        const timer = setTimeout(() => {
+          detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [selectedTicker]);
+  }, [selectedTicker, opportunities, visibleCount]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -134,9 +143,21 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
           </p>
         </div>
 
-        {/* Quick Sector Filter Dropdown & Status */}
-        {onSelectSector && availableSectors.length > 0 && (
-          <div className="flex items-center gap-2">
+        {/* Right controls: Didactic Help & Quick Sector Filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenEducationalGuide && (
+            <button
+              onClick={() => onOpenEducationalGuide('indicadores')}
+              className="flex items-center gap-1.5 bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/40 text-blue-300 hover:text-white px-2.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer"
+              title="Aprenda como interpretar cada métrica técnica e selecionar os melhores ativos"
+            >
+              <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
+              <span>Como Interpretar?</span>
+            </button>
+          )}
+
+          {/* Quick Sector Filter Dropdown & Status */}
+          {onSelectSector && availableSectors.length > 0 && (
             <div className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs">
               <Filter className="w-3.5 h-3.5 text-indigo-400" />
               <span className="text-slate-400 font-medium">Setor:</span>
@@ -163,63 +184,63 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
                 </button>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div ref={tableContainerRef} className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-slate-900/90 text-slate-400 font-semibold border-b border-slate-700 select-none">
-              <th className="py-3 px-3.5 cursor-pointer hover:text-white" onClick={() => handleSort('Ticker')}>
+              <th className="py-3 px-3.5 cursor-pointer hover:text-white" onClick={() => handleSort('Ticker')} title="Código de negociação do ativo na B3">
                 <div className="flex items-center gap-1">
                   Ticker {sortField === 'Ticker' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-2">Classe</th>
-              <th className="py-3 px-3 cursor-pointer hover:text-white" onClick={() => handleSort('Setor')}>
+              <th className="py-3 px-2" title="Classe do ativo: Ação, BDR, ETF ou Fundo Imobiliário">Classe</th>
+              <th className="py-3 px-3 cursor-pointer hover:text-white" onClick={() => handleSort('Setor')} title="Segmento de atuação da empresa">
                 <div className="flex items-center gap-1">
                   Setor {sortField === 'Setor' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
               <th className="py-3 px-3">Empresa</th>
-              <th className="py-3 px-2 text-center cursor-pointer hover:text-white" onClick={() => handleSort('Liquidez')} title="Liquidez Real Executada (1 a 10) baseada no volume diário real. Mostra a capacidade de comprar/vender sem spread largo e slippage no Profit.">
+              <th className="py-3 px-2 text-center cursor-pointer hover:text-white" onClick={() => handleSort('Liquidez')} title="Liquidez Real Executada (1 a 10). Acima de 5 garante fácil compra/venda no Home Broker sem spread aberto.">
                 <div className="flex items-center justify-center gap-1">
                   Liq. {sortField === 'Liquidez' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-3 text-right cursor-pointer hover:text-white" onClick={() => handleSort('Preco')}>
+              <th className="py-3 px-3 text-right cursor-pointer hover:text-white" onClick={() => handleSort('Preco')} title="Última cotação negociada em Reais (R$)">
                 <div className="flex items-center justify-end gap-1">
                   Preço {sortField === 'Preco' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-3 text-right cursor-pointer hover:text-white" onClick={() => handleSort('Queda_Dia')}>
+              <th className="py-3 px-3 text-right cursor-pointer hover:text-white" onClick={() => handleSort('Queda_Dia')} title="Desvalorização no pregão. Quedas expressivas geram potencial repique elástico.">
                 <div className="flex items-center justify-end gap-1">
                   Queda {sortField === 'Queda_Dia' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-3 text-center cursor-pointer hover:text-white" onClick={() => handleSort('IS')}>
+              <th className="py-3 px-3 text-center cursor-pointer hover:text-white" onClick={() => handleSort('IS')} title="Índice de Sobrevenda (IS: 0 a 100). Valores acima de 70 indicam exaustão dos vendedores e iminência de repique.">
                 <div className="flex items-center justify-center gap-1">
                   I.S. (Sobrevenda) {sortField === 'IS' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-3 text-right cursor-pointer hover:text-white" onClick={() => handleSort('Volume')}>
+              <th className="py-3 px-3 text-right cursor-pointer hover:text-white" onClick={() => handleSort('Volume')} title="Volume financeiro transacionado no pregão de hoje">
                 <div className="flex items-center justify-end gap-1">
                   Vol. Fin. {sortField === 'Volume' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-2 text-center">Potencial</th>
-              <th className="py-3 px-3 text-center cursor-pointer hover:text-white" onClick={() => handleSort('Score')}>
+              <th className="py-3 px-2 text-center" title="Classificação algorítmica de probabilidade de reversão">Potencial</th>
+              <th className="py-3 px-3 text-center cursor-pointer hover:text-white" onClick={() => handleSort('Score')} title="Score quantitativo composto ponderado (0 a 100)">
                 <div className="flex items-center justify-center gap-1">
                   Score {sortField === 'Score' && (sortAsc ? <ChevronUp className="w-3 h-3 text-blue-400" /> : <ChevronDown className="w-3 h-3 text-blue-400" />)}
                 </div>
               </th>
-              <th className="py-3 px-3">Sinais Técnicos</th>
+              <th className="py-3 px-3" title="Gatilhos técnicos alinhados: Fibonacci, Triple Screen, Estocástico e Médias Móveis">Sinais Técnicos</th>
               <th className="py-3 px-2 text-center">Ação</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/50">
-            {sortedData.map((row) => {
+            {sortedData.slice(0, visibleCount).map((row) => {
               const isSelected = row.Ticker === selectedTicker;
               const sector = row.Setor || 'Outros';
               const sectorStyle = getSectorStyle(sector);
@@ -404,6 +425,48 @@ export const OpportunitiesTable: React.FC<OpportunitiesTableProps> = ({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Table Footer: Full Scan Status & Pagination Controls */}
+      <div className="p-4 bg-slate-850 border-t border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-slate-300">
+          <span>
+            Mostrando <strong className="text-white font-mono">{Math.min(visibleCount, sortedData.length)}</strong> de{' '}
+            <strong className="text-white font-mono">{sortedData.length}</strong> ativos em queda
+          </span>
+          <span className="text-slate-600 hidden sm:inline">•</span>
+          <span className="text-emerald-400 font-semibold inline-flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            100% da B3 rastreada (sem interrupção ou cortes)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {visibleCount < sortedData.length ? (
+            <>
+              <button
+                type="button"
+                id="btn-load-more-assets"
+                onClick={() => setVisibleCount((prev) => Math.min(prev + 100, sortedData.length))}
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-sm cursor-pointer"
+              >
+                Carregar mais (+100)
+              </button>
+              <button
+                type="button"
+                id="btn-show-all-assets"
+                onClick={() => setVisibleCount(sortedData.length)}
+                className="px-3.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold transition cursor-pointer"
+              >
+                Exibir Todos ({sortedData.length})
+              </button>
+            </>
+          ) : (
+            <span className="text-emerald-400 font-medium bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-lg">
+              ✓ Todos os {sortedData.length} ativos em queda listados com sucesso
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

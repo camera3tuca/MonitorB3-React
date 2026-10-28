@@ -25,6 +25,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var import_express = __toESM(require("express"), 1);
 var import_cors = __toESM(require("cors"), 1);
 var import_path = __toESM(require("path"), 1);
+var import_fs = __toESM(require("fs"), 1);
 var import_vite = require("vite");
 var app = (0, import_express.default)();
 var PORT = 3e3;
@@ -47,6 +48,10 @@ app.use((req, res, next) => {
 });
 var publicPath = import_path.default.join(process.cwd(), "public");
 app.use(import_express.default.static(publicPath));
+var distAssetsPath = import_path.default.join(process.cwd(), "dist", "assets");
+if (import_fs.default.existsSync(distAssetsPath)) {
+  app.use("/assets", import_express.default.static(distAssetsPath));
+}
 app.get("/manifest.json", (req, res) => {
   res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
   res.sendFile(import_path.default.join(publicPath, "manifest.json"));
@@ -378,9 +383,14 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
 var scanCacheByTicker = /* @__PURE__ */ new Map();
-app.post("/api/scan", async (req, res) => {
+app.all("/api/scan", async (req, res) => {
   try {
-    const { classes = ["A\xE7\xE3o", "BDR", "ETF"] } = req.body || {};
+    let classes = ["A\xE7\xE3o", "BDR", "ETF"];
+    if (req.body && req.body.classes && Array.isArray(req.body.classes)) {
+      classes = req.body.classes;
+    } else if (req.query && req.query.classes) {
+      classes = String(req.query.classes).split(",");
+    }
     const tvColumns = [
       "name",
       "close",
@@ -410,7 +420,7 @@ app.post("/api/scan", async (req, res) => {
       "average_volume_30d_calc",
       "average_volume_90d_calc"
     ];
-    const fetchTvScan = async (filter, range = [0, 100]) => {
+    const fetchTvScan = async (filter, range = [0, 1e3]) => {
       try {
         const resp = await fetch("https://scanner.tradingview.com/brazil/scan", {
           method: "POST",
@@ -423,7 +433,7 @@ app.post("/api/scan", async (req, res) => {
             sort: { sortBy: "change", sortOrder: "asc" },
             range
           }),
-          signal: AbortSignal.timeout(6e3)
+          signal: AbortSignal.timeout(12e3)
         });
         if (resp.ok) {
           const json = await resp.json();
@@ -440,20 +450,20 @@ app.post("/api/scan", async (req, res) => {
         fetchTvScan([
           { left: "type", operation: "equal", right: "stock" },
           { left: "change", operation: "less", right: 0 }
-        ], [0, 100]),
+        ], [0, 1e3]),
         fetchTvScan([
           { left: "type", operation: "equal", right: "dr" },
           { left: "change", operation: "less", right: 0 }
-        ], [0, 100]),
+        ], [0, 1e3]),
         fetchTvScan([
           { left: "typespecs", operation: "has", right: ["etf"] },
           { left: "change", operation: "less", right: 0 }
-        ], [0, 80]),
+        ], [0, 500]),
         fetchTvScan([
           { left: "type", operation: "equal", right: "fund" },
           { left: "typespecs", operation: "has_none_of", right: ["etf"] },
           { left: "change", operation: "less", right: 0 }
-        ], [0, 40])
+        ], [0, 600])
       ]);
       const combinedRaw = [...stocksData, ...bdrsData, ...etfsData, ...fiisData];
       const seenTickers = /* @__PURE__ */ new Set();
